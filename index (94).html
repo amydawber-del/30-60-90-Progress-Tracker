@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>30/60/90 Day Progress Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    /* ===================== CSS VARIABLES ===================== */
+    :root {
+      --bg: #f5f4f1;
+      --surface: #ffffff;
+      --surface-2: #faf9f7;
+      --border: #e4e1db;
+      --border-strong: #c9c4bb;
+      --text: #1a1916;
+      --text-muted: #6b6760;
+      --text-light: #9c9890;
+      --accent: #1d4b3e;
+      --accent-light: #2d6b59;
+      --accent-pale: #e8f0ed;
+      --warn: #b85c00;
+      --warn-pale: #fef3e8;
+      --danger: #8b1a1a;
+      --danger-pale: #fdf0f0;
+      --success: #1d4b3e;
+      --success-pale: #e8f0ed;
+      --day30: #2c4a7c;
+      --day30-pale: #ebf0f8;
+      --day60: #5c3a7c;
+      --day60-pale: #f2edf8;
+      --day90: #1d4b3e;
+      --day90-pale: #e8f0ed;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+    }
+
+    /* ===================== RESET & BASE ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ===================== LAYOUT ===================== */
+    .app-header {
+      background: var(--accent);
+      color: white;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+      opacity: 0.97;
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ===================== SAVE STATUS ===================== */
+    #saveStatus {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    #saveStatus.saved { background: rgba(255,255,255,0.18); color: #a8f5d4; }
+    #saveStatus.unsaved { background: rgba(255,200,100,0.25); color: #ffd87a; }
+    #saveStatus.saving { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+    #saveStatus.error { background: rgba(255,100,100,0.25); color: #ffaaaa; }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .status-dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ===================== BUTTONS ===================== */
+    .btn {
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: white;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .btn-primary:hover { background: #e8f5f0; }
+    .btn-ghost {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.2); }
+    .btn-outline {
+      background: white;
+      color: var(--text);
+      border: 1.5px solid var(--border-strong);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger-outline {
+      background: white;
+      color: var(--danger);
+      border: 1.5px solid #e8c0c0;
+    }
+    .btn-danger-outline:hover { background: var(--danger-pale); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===================== CARDS ===================== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 400;
+    }
+    .card-body { padding: 22px; }
+
+    /* ===================== TEAM MEMBER SETUP ===================== */
+    .setup-card {
+      margin-bottom: 24px;
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field-group input, .field-group select {
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field-group input:focus, .field-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .review-dates {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .review-date-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .review-date-badge .label { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .review-date-badge.d30 { background: var(--day30-pale); color: var(--day30); }
+    .review-date-badge.d60 { background: var(--day60-pale); color: var(--day60); }
+    .review-date-badge.d90 { background: var(--day90-pale); color: var(--day90); }
+
+    /* ===================== TABS ===================== */
+    .tabs-wrapper { margin-bottom: 4px; }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .tab {
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 2.5px solid transparent;
+      margin-bottom: -2px;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); background: var(--surface-2); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; background: var(--surface); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===================== REVIEW STAGE HEADER ===================== */
+    .stage-header {
+      padding: 20px 22px 16px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stage-header.day30 { background: var(--day30-pale); }
+    .stage-header.day60 { background: var(--day60-pale); }
+    .stage-header.day90 { background: var(--day90-pale); }
+
+    .stage-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .day30 .stage-tag { background: var(--day30); color: white; }
+    .day60 .stage-tag { background: var(--day60); color: white; }
+    .day90 .stage-tag { background: var(--day90); color: white; }
+
+    .stage-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 6px;
+    }
+    .day30 .stage-header h2 { color: var(--day30); }
+    .day60 .stage-header h2 { color: var(--day60); }
+    .day90 .stage-header h2 { color: var(--day90); }
+
+    .stage-header p { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ===================== EXPECTATION SECTIONS ===================== */
+    .section-block {
+      margin: 20px 0;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--text);
+      padding: 12px 22px 10px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .icon {
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    /* ===================== EXPECTATION ROWS ===================== */
+    .expectations-table { width: 100%; border-collapse: collapse; }
+    .exp-header-row th {
+      padding: 8px 12px 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .exp-header-row th:first-child { padding-left: 22px; width: 38%; }
+    .exp-header-row th.status-th { text-align: center; width: 110px; }
+    .exp-row { border-bottom: 1px solid var(--border); }
+    .exp-row:last-child { border-bottom: none; }
+    .exp-row:hover { background: #faf9f7; }
+    .exp-text-cell {
+      padding: 12px 12px 12px 22px;
+      font-size: 14px;
+      color: var(--text);
+      vertical-align: top;
+    }
+    .exp-status-cell {
+      padding: 12px 8px;
+      text-align: center;
+      vertical-align: top;
+    }
+    .exp-notes-cell {
+      padding: 10px 22px 10px 8px;
+      vertical-align: top;
+    }
+    .notes-input {
+      font-family: var(--font-body);
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      resize: vertical;
+      min-height: 38px;
+      width: 100%;
+      min-width: 180px;
+      transition: border-color 0.15s;
+    }
+    .notes-input:focus { outline: none; border-color: var(--accent); }
+
+    /* Status radio buttons as pill options */
+    .status-options {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+    .status-radio {
+      display: none;
+    }
+    .status-label {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.15s;
+      white-space: nowrap;
+      user-select: none;
+      display: block;
+    }
+    .status-label:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Status colours for 30/60 day */
+    input[value="Not Started"]:checked + .status-label { background: #f3f3f3; border-color: #999; color: #444; }
+    input[value="In Progress"]:checked + .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
+    input[value="Confident"]:checked + .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
+
+    /* Status colours for 90 day */
+    input[value="Not Met"]:checked + .status-label { background: var(--danger-pale); border-color: var(--danger); color: var(--danger); }
+    input[value="Partially Met"]:checked + .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
+    input[value="Met"]:checked + .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
+
+    /* ===================== SUMMARY SECTION ===================== */
+    .summary-section {
+      padding: 22px;
+      border-top: 2px solid var(--border);
+      background: var(--surface-2);
+    }
+    .summary-section h3 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-bottom: 16px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .summary-field { display: flex; flex-direction: column; gap: 5px; }
+    .summary-field label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .summary-textarea {
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.15s;
+    }
+    .summary-textarea:focus { outline: none; border-color: var(--accent); }
+
+    /* ===================== OVERALL POSITION ===================== */
+    .position-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .position-option { display: none; }
+    .position-label {
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 2px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .position-label:hover { border-color: var(--accent); color: var(--accent); }
+    input[value="On track"]:checked + .position-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
+    input[value="Slightly behind but improving"]:checked + .position-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
+    input[value="Cause for concern"]:checked + .position-label { background: var(--danger-pale); border-color: var(--danger); color: var(--danger); }
+
+    /* Final outcome */
+    input[value="Successfully meeting expectations"]:checked + .position-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
+    input[value="Meeting most expectations, with some further support required"]:checked + .position-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
+    input[value="Not yet meeting expectations"]:checked + .position-label { background: #fff3e0; border-color: #c67600; color: #c67600; }
+    input[value="Probation concern / further action required"]:checked + .position-label { background: var(--danger-pale); border-color: var(--danger); color: var(--danger); }
+
+    /* ===================== REFERENCE SECTIONS ===================== */
+    .reference-block {
+      margin: 16px 22px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .reference-block summary {
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 12px 16px;
+      cursor: pointer;
+      color: var(--text-muted);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .reference-block summary::before {
+      content: '▸';
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+    .reference-block[open] summary::before { transform: rotate(90deg); }
+    .reference-block summary:hover { color: var(--text); background: var(--border); }
+    .reference-list {
+      padding: 4px 16px 14px 36px;
+      border-top: 1px solid var(--border);
+    }
+    .reference-list li {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      padding: 4px 0;
+      list-style: disc;
+      line-height: 1.5;
+    }
+
+    /* ===================== ACTIVITY LOG ===================== */
+    .activity-log-section { margin-top: 24px; }
+    .log-table-wrap { overflow-x: auto; }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .log-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .log-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: var(--surface-2); }
+    .log-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--text-light);
+      font-size: 13.5px;
+    }
+
+    /* ===================== TEAM MEMBER SELECTOR ===================== */
+    .member-selector-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .member-selector-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .member-selector-bar select {
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: white;
+      color: var(--text);
+      min-width: 200px;
+    }
+
+    /* ===================== MODAL ===================== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 28px;
+      width: 100%;
+      max-width: 460px;
+    }
+    .modal h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-bottom: 18px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ===================== ALERTS ===================== */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-warn { background: var(--warn-pale); color: var(--warn); border: 1px solid #f0c070; }
+    .alert-info { background: var(--accent-pale); color: var(--accent); border: 1px solid #a8d0c0; }
+
+    /* ===================== TOAST ===================== */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      box-shadow: var(--shadow-md);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 9999;
+      max-width: 320px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { background: var(--danger); }
+
+    /* ===================== LOADING ===================== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(245,244,241,0.8);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--text-muted); }
+
+    /* ===================== PRINT STYLES ===================== */
+    @media print {
+      .app-header, .member-selector-bar, .btn, .tabs, #toast, .loading-overlay,
+      .modal-overlay, .notes-input:placeholder-shown, .activity-log-section { display: none !important; }
+      body { background: white; font-size: 12px; }
+      .main { padding: 0; max-width: 100%; }
+      .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+      .tab-panel { display: block !important; }
+      .stage-header { break-after: avoid; }
+      .section-title { break-after: avoid; }
+      .exp-row { break-inside: avoid; }
+      .summary-section { break-inside: avoid; }
+      .review-date-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .stage-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .status-label { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 700px) {
+      .header-title { font-size: 1.05rem; }
+      .setup-grid { grid-template-columns: 1fr 1fr; }
+      .exp-header-row th.notes-th { display: none; }
+      .exp-notes-cell { display: none; }
+      .exp-header-row th.status-th { width: auto; }
+      .status-options { flex-direction: row; }
+      .status-label { font-size: 10.5px; padding: 3px 7px; }
+      .position-selector { flex-direction: column; }
+      .tab { font-size: 12.5px; padding: 8px 12px; }
+    }
+    @media (max-width: 480px) {
+      .setup-grid { grid-template-columns: 1fr; }
+      .card-body { padding: 14px; }
+      .exp-text-cell { padding-left: 14px; }
+    }
+
+    /* ===================== SECTION ICONS ===================== */
+    .icon-delivery { background: #e8f0ff; color: #2c4a7c; }
+    .icon-ops { background: #f0e8ff; color: #5c3a7c; }
+    .icon-accounting { background: #e8f5ed; color: #1d4b3e; }
+    .icon-behaviour { background: #fff3e0; color: #8a4a00; }
+    .icon-product { background: #fce8e8; color: #7c2c2c; }
+  </style>
+</head>
+<body>
+
+<!-- ====== APP HEADER ====== -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-title">30 / 60 / 90 Day Progress Tracker</div>
+    <div class="header-controls">
+      <span id="saveStatus"><span class="status-dot"></span> No data loaded</span>
+      <button class="btn btn-ghost" onclick="refreshFromSheet()">↻ Refresh</button>
+      <button class="btn btn-primary" onclick="saveChanges()">💾 Save Changes</button>
+    </div>
+  </div>
+</header>
+
+<!-- ====== LOADING OVERLAY ====== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading…</div>
+</div>
+
+<!-- ====== TOAST ====== -->
+<div id="toast"></div>
+
+<!-- ====== NEW MEMBER MODAL ====== -->
+<div class="modal-overlay" id="newMemberModal">
+  <div class="modal">
+    <h3>Add New Team Member</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field-group">
+        <label>Full Name *</label>
+        <input type="text" id="newName" placeholder="e.g. Sarah Johnson" />
+      </div>
+      <div class="field-group">
+        <label>Role *</label>
+        <input type="text" id="newRole" placeholder="e.g. Product Trainer" />
+      </div>
+      <div class="field-group">
+        <label>Start Date *</label>
+        <input type="date" id="newStartDate" />
+      </div>
+      <div class="field-group">
+        <label>Manager Name *</label>
+        <input type="text" id="newManager" placeholder="e.g. Amy Dawber" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeNewMemberModal()">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--accent);color:white;" onclick="createNewMember()">Create Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MAIN CONTENT ====== -->
+<main class="main">
+
+  <!-- CONFIG ALERT -->
+  <div class="alert alert-warn" id="configAlert">
+    ⚠️ <strong>Setup required:</strong> Please set your Google Apps Script Web App URL at the top of this page's JavaScript (<code>APPS_SCRIPT_URL</code>).
+  </div>
+
+  <!-- TEAM MEMBER SELECTOR -->
+  <div class="member-selector-bar">
+    <label>Team Member</label>
+    <select id="memberSelect" onchange="loadMember()">
+      <option value="">— Select a team member —</option>
+    </select>
+    <button class="btn btn-outline" onclick="openNewMemberModal()">+ New Record</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Print / Export PDF</button>
+  </div>
+
+  <!-- TEAM MEMBER INFO CARD -->
+  <div class="card setup-card" id="setupCard" style="display:none;">
+    <div class="card-header">
+      <h2 id="memberHeading">Team Member Details</h2>
+      <span id="memberIdDisplay" style="font-size:12px;color:var(--text-light);"></span>
+    </div>
+    <div class="card-body">
+      <div class="setup-grid">
+        <div class="field-group">
+          <label>Full Name</label>
+          <input type="text" id="tmName" placeholder="Full name" data-field="teamMemberName" />
+        </div>
+        <div class="field-group">
+          <label>Role</label>
+          <input type="text" id="tmRole" placeholder="Job title / role" data-field="role" />
+        </div>
+        <div class="field-group">
+          <label>Start Date</label>
+          <input type="date" id="tmStartDate" data-field="startDate" onchange="updateReviewDates()" />
+        </div>
+        <div class="field-group">
+          <label>Manager</label>
+          <input type="text" id="tmManager" placeholder="Manager name" data-field="managerName" />
+        </div>
+      </div>
+      <div class="review-dates" id="reviewDates" style="margin-top:16px;">
+        <div class="review-date-badge d30"><span class="label">30 Day</span> <span id="date30">—</span></div>
+        <div class="review-date-badge d60"><span class="label">60 Day</span> <span id="date60">—</span></div>
+        <div class="review-date-badge d90"><span class="label">90 Day</span> <span id="date90">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACKER TABS -->
+  <div id="trackerContent" style="display:none;">
+    <div class="tabs-wrapper">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('tab30', this)">30 Day Review</button>
+        <button class="tab" onclick="switchTab('tab60', this)">60 Day Review</button>
+        <button class="tab" onclick="switchTab('tab90', this)">90 Day Review</button>
+        <button class="tab" onclick="switchTab('tabRef', this)">Reference</button>
+        <button class="tab" onclick="switchTab('tabLog', this)">Activity Log</button>
+      </div>
+    </div>
+
+    <!-- ============================== 30 DAY TAB ============================== -->
+    <div class="tab-panel active" id="tab30">
+      <div class="card">
+        <div class="stage-header day30">
+          <div class="stage-tag">30 Day Review</div>
+          <h2>Foundation &amp; Learning</h2>
+          <p>The first 30 days are focused on building a strong understanding of the product, internal systems, training processes, and accounting onboarding workflows. At this stage, the team member should mainly be shadowing, learning, asking questions, reviewing examples, and starting to complete basic tasks with support.</p>
+        </div>
+
+        <!-- Training Delivery -->
+        <div class="section-block">
+          <div class="section-title">
+            <span class="icon icon-delivery">🎓</span> Training Delivery
+          </div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_30_delivery"></tbody>
+          </table>
+        </div>
+
+        <!-- Training Operations -->
+        <div class="section-block">
+          <div class="section-title">
+            <span class="icon icon-ops">⚙️</span> Training Operations
+          </div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_30_operations"></tbody>
+          </table>
+        </div>
+
+        <!-- Accounting Onboarding -->
+        <div class="section-block">
+          <div class="section-title">
+            <span class="icon icon-accounting">📋</span> Accounting Onboarding Monitoring
+          </div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_30_accounting"></tbody>
+          </table>
+        </div>
+
+        <!-- Behaviour -->
+        <div class="section-block">
+          <div class="section-title">
+            <span class="icon icon-behaviour">🤝</span> Behaviour &amp; Approach
+          </div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_30_behaviour"></tbody>
+          </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-section">
+          <h3>30 Day Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-field">
+              <label>What is going well</label>
+              <textarea class="summary-textarea" id="sum_30_going_well" placeholder="Notes…" data-stage="30" data-key="whatIsGoingWell"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Areas still developing</label>
+              <textarea class="summary-textarea" id="sum_30_developing" placeholder="Notes…" data-stage="30" data-key="areasStillDeveloping"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Support needed from manager</label>
+              <textarea class="summary-textarea" id="sum_30_support" placeholder="Notes…" data-stage="30" data-key="supportNeeded"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Actions before 60 day review</label>
+              <textarea class="summary-textarea" id="sum_30_actions" placeholder="Notes…" data-stage="30" data-key="actionsBeforeNextReview"></textarea>
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);display:block;margin-bottom:10px;">Overall 30 Day Position</label>
+            <div class="position-selector">
+              <input type="radio" name="pos30" id="pos30_1" value="On track" class="position-option" data-field="day30OverallPosition" />
+              <label for="pos30_1" class="position-label">✓ On track</label>
+              <input type="radio" name="pos30" id="pos30_2" value="Slightly behind but improving" class="position-option" data-field="day30OverallPosition" />
+              <label for="pos30_2" class="position-label">~ Slightly behind but improving</label>
+              <input type="radio" name="pos30" id="pos30_3" value="Cause for concern" class="position-option" data-field="day30OverallPosition" />
+              <label for="pos30_3" class="position-label">⚠ Cause for concern</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end tab30 -->
+
+    <!-- ============================== 60 DAY TAB ============================== -->
+    <div class="tab-panel" id="tab60">
+      <div class="card">
+        <div class="stage-header day60">
+          <div class="stage-tag">60 Day Review</div>
+          <h2>Supported Delivery</h2>
+          <p>By 60 days, the team member should be starting to take ownership with support. This includes co-delivering training, managing smaller bookings end-to-end, completing system updates accurately, and running accounting onboarding reviews with guidance.</p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-delivery">🎓</span> Training Delivery</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_60_delivery"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-ops">⚙️</span> Training Operations</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_60_operations"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-accounting">📋</span> Accounting Onboarding Monitoring</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_60_accounting"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-behaviour">🤝</span> Behaviour &amp; Approach</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Started</th>
+              <th class="status-th">In Progress</th>
+              <th class="status-th">Confident</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_60_behaviour"></tbody>
+          </table>
+        </div>
+
+        <div class="summary-section">
+          <h3>60 Day Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-field">
+              <label>What is going well</label>
+              <textarea class="summary-textarea" id="sum_60_going_well" placeholder="Notes…" data-stage="60" data-key="whatIsGoingWell"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Areas still developing</label>
+              <textarea class="summary-textarea" id="sum_60_developing" placeholder="Notes…" data-stage="60" data-key="areasStillDeveloping"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Support needed from manager</label>
+              <textarea class="summary-textarea" id="sum_60_support" placeholder="Notes…" data-stage="60" data-key="supportNeeded"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Actions before 90 day review</label>
+              <textarea class="summary-textarea" id="sum_60_actions" placeholder="Notes…" data-stage="60" data-key="actionsBeforeNextReview"></textarea>
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);display:block;margin-bottom:10px;">Overall 60 Day Position</label>
+            <div class="position-selector">
+              <input type="radio" name="pos60" id="pos60_1" value="On track" class="position-option" data-field="day60OverallPosition" />
+              <label for="pos60_1" class="position-label">✓ On track</label>
+              <input type="radio" name="pos60" id="pos60_2" value="Slightly behind but improving" class="position-option" data-field="day60OverallPosition" />
+              <label for="pos60_2" class="position-label">~ Slightly behind but improving</label>
+              <input type="radio" name="pos60" id="pos60_3" value="Cause for concern" class="position-option" data-field="day60OverallPosition" />
+              <label for="pos60_3" class="position-label">⚠ Cause for concern</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end tab60 -->
+
+    <!-- ============================== 90 DAY TAB ============================== -->
+    <div class="tab-panel" id="tab90">
+      <div class="card">
+        <div class="stage-header day90">
+          <div class="stage-tag">90 Day Review</div>
+          <h2>Independent Delivery &amp; Ownership</h2>
+          <p>By 90 days, the team member should be able to work independently across training delivery, training operations, and accounting onboarding monitoring. They should be confidently managing their workload, delivering client-facing sessions, keeping systems up to date, progressing onboarding projects, and escalating risks where needed.</p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-delivery">🎓</span> Training Delivery</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Met</th>
+              <th class="status-th">Partially Met</th>
+              <th class="status-th">Met</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_90_delivery"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-ops">⚙️</span> Training Operations</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Met</th>
+              <th class="status-th">Partially Met</th>
+              <th class="status-th">Met</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_90_operations"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-accounting">📋</span> Accounting Onboarding Monitoring</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Met</th>
+              <th class="status-th">Partially Met</th>
+              <th class="status-th">Met</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_90_accounting"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-product">📚</span> Product &amp; Workflow Knowledge</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Met</th>
+              <th class="status-th">Partially Met</th>
+              <th class="status-th">Met</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_90_product"></tbody>
+          </table>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title"><span class="icon icon-behaviour">🤝</span> Behaviour &amp; Ownership</div>
+          <table class="expectations-table">
+            <thead class="exp-header-row"><tr>
+              <th>Expectation</th>
+              <th class="status-th">Not Met</th>
+              <th class="status-th">Partially Met</th>
+              <th class="status-th">Met</th>
+              <th class="notes-th">Notes / Evidence</th>
+            </tr></thead>
+            <tbody id="exp_90_behaviour"></tbody>
+          </table>
+        </div>
+
+        <!-- 90 day summary -->
+        <div class="summary-section">
+          <h3>Final 90 Day Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-field">
+              <label>Overall strengths shown</label>
+              <textarea class="summary-textarea" id="sum_90_strengths" placeholder="Notes…" data-stage="90" data-key="whatIsGoingWell"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Areas still requiring development</label>
+              <textarea class="summary-textarea" id="sum_90_development" placeholder="Notes…" data-stage="90" data-key="areasStillDeveloping"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Evidence of independent delivery</label>
+              <textarea class="summary-textarea" id="sum_90_independent" placeholder="Notes…" data-stage="90" data-key="supportNeeded"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Evidence of ownership &amp; accountability</label>
+              <textarea class="summary-textarea" id="sum_90_ownership" placeholder="Notes…" data-stage="90" data-key="actionsBeforeNextReview"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Support still required</label>
+              <textarea class="summary-textarea" id="sum_90_support" placeholder="Notes…" data-stage="90" data-key="supportStillRequired"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Manager comments</label>
+              <textarea class="summary-textarea" id="sum_90_manager" placeholder="Notes…" data-stage="90" data-key="managerComments"></textarea>
+            </div>
+            <div class="summary-field">
+              <label>Team member comments</label>
+              <textarea class="summary-textarea" id="sum_90_member" placeholder="Notes…" data-stage="90" data-key="teamMemberComments"></textarea>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);display:block;margin-bottom:10px;">Final Outcome</label>
+            <div class="position-selector">
+              <input type="radio" name="finalOutcome" id="fo1" value="Successfully meeting expectations" class="position-option" data-field="finalOutcome" />
+              <label for="fo1" class="position-label">✓ Successfully meeting expectations</label>
+              <input type="radio" name="finalOutcome" id="fo2" value="Meeting most expectations, with some further support required" class="position-option" data-field="finalOutcome" />
+              <label for="fo2" class="position-label">~ Meeting most expectations, with some further support required</label>
+              <input type="radio" name="finalOutcome" id="fo3" value="Not yet meeting expectations" class="position-option" data-field="finalOutcome" />
+              <label for="fo3" class="position-label">✗ Not yet meeting expectations</label>
+              <input type="radio" name="finalOutcome" id="fo4" value="Probation concern / further action required" class="position-option" data-field="finalOutcome" />
+              <label for="fo4" class="position-label">⚠ Probation concern / further action required</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end tab90 -->
+
+    <!-- ============================== REFERENCE TAB ============================== -->
+    <div class="tab-panel" id="tabRef">
+      <div class="card">
+        <div class="card-header"><h2>Reference Guide</h2></div>
+        <div class="card-body">
+          <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:20px;">These sections are for reference only and are not editable. Use them to guide assessment decisions.</p>
+
+          <details class="reference-block" open>
+            <summary>Progression Indicators</summary>
+            <ul class="reference-list">
+              <li>Progression from shadowing to supported delivery to independent delivery</li>
+              <li>Increased confidence in client-facing work</li>
+              <li>Consistent and accurate use of internal systems</li>
+              <li>Proactive communication and ownership of tasks</li>
+              <li>Ability to identify issues and take action without needing prompting</li>
+              <li>Clear understanding of training and accounting onboarding processes</li>
+              <li>Reliable follow-through on agreed actions</li>
+            </ul>
+          </details>
+
+          <details class="reference-block" style="margin-top:12px;">
+            <summary>Causes for Concern / Probation Risks</summary>
+            <ul class="reference-list">
+              <li>Lack of progress towards independent delivery by day 90</li>
+              <li>Avoidance of client interaction or low confidence without improvement</li>
+              <li>Poor system usage — Rocketlane not updated, tasks missed, or lack of diary/workload visibility</li>
+              <li>Failure to proactively manage or chase onboarding projects</li>
+              <li>Repeated reliance on others without showing learning or development</li>
+              <li>Lack of organisation, accountability, or attention to detail</li>
+              <li>Not escalating risks or blockers appropriately</li>
+              <li>Not following agreed processes after support or guidance has been given</li>
+            </ul>
+          </details>
+
+          <details class="reference-block" style="margin-top:12px;">
+            <summary>Review Stage Overview</summary>
+            <ul class="reference-list">
+              <li><strong>30 days:</strong> Foundation &amp; Learning — mainly shadowing, learning, asking questions</li>
+              <li><strong>60 days:</strong> Supported Delivery — taking ownership with support, reduced reliance on others</li>
+              <li><strong>90 days:</strong> Independent Delivery &amp; Ownership — working independently, managing full workload</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </div><!-- end tabRef -->
+
+    <!-- ============================== ACTIVITY LOG TAB ============================== -->
+    <div class="tab-panel activity-log-section" id="tabLog">
+      <div class="card">
+        <div class="card-header">
+          <h2>Activity Log</h2>
+          <span style="font-size:12.5px;color:var(--text-light);" id="logCount"></span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div id="logContainer">
+            <div class="log-empty">No activity logged yet for this team member.</div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end tabLog -->
+
+  </div><!-- end trackerContent -->
+</main>
+
+<script>
+// =====================================================================
+// CONFIGURATION — replace this with your deployed Apps Script Web App URL
+// =====================================================================
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// =====================================================================
+// EXPECTATION DATA
+// All expectations are defined here so they're easy to update
+// =====================================================================
+const EXPECTATIONS = {
+  '30': {
+    delivery: [
+      'Has shadowed training sessions across relevant areas',
+      'Understands the structure of a good training session',
+      'Can explain the difference between sales, lettings and accounting training',
+      'Actively asks questions during/after shadowing',
+      'Starts to understand how to adapt training to client needs',
+      'Demonstrates awareness of client-facing tone and professionalism'
+    ],
+    operations: [
+      'Understands the full training lifecycle from request to completion',
+      'Understands how training requests come in',
+      'Knows how to use the Training Dashboard',
+      'Has started learning how Rocketlane is used for training projects',
+      'Has started learning how HubSpot is used for tickets, client communication and invoicing',
+      'Understands the importance of accurate system updates and visibility'
+    ],
+    accounting: [
+      'Understands the purpose of accounting onboarding boards',
+      'Has shadowed accounting board reviews',
+      'Understands the key stages of accounting onboarding',
+      'Can identify where a client is in the onboarding process with support',
+      'Understands when a client may need chasing',
+      'Understands when a risk or blocker may need escalating'
+    ],
+    behaviour: [
+      'Shows curiosity and asks questions',
+      'Takes notes and refers back to guidance',
+      'Communicates clearly with their manager',
+      'Keeps diary / workload visible',
+      'Shows willingness to learn and take feedback',
+      'Demonstrates good organisation and attention to detail'
+    ]
+  },
+  '60': {
+    delivery: [
+      'Has co-delivered training sessions with support',
+      'Can explain key workflows clearly to clients',
+      'Shows increased confidence in client-facing conversations',
+      'Can answer basic product questions or find answers quickly',
+      'Begins adapting delivery based on client needs',
+      'Takes feedback from sessions and applies it'
+    ],
+    operations: [
+      'Can manage smaller training bookings with support',
+      'Updates the Training Dashboard accurately',
+      'Updates Rocketlane tasks and project information correctly',
+      'Uses HubSpot correctly for relevant client/ticket updates',
+      'Understands when invoicing needs to be raised or checked',
+      'Communicates clearly with clients and internal teams'
+    ],
+    accounting: [
+      'Runs weekly accounting reviews with guidance',
+      'Can identify clients who need chasing',
+      'Can identify common blockers or missing tasks',
+      'Updates accounting onboarding boards accurately',
+      'Understands when to escalate a risk',
+      'Shows awareness of what "good" looks like at each stage'
+    ],
+    behaviour: [
+      'Proactively communicates progress and blockers',
+      'Starts taking ownership of tasks without constant prompting',
+      'Shows improved organisation and prioritisation',
+      'Follows agreed processes consistently',
+      'Accepts feedback and shows evidence of improvement',
+      'Demonstrates increasing accountability for workload'
+    ]
+  },
+  '90': {
+    delivery: [
+      'Confidently delivers training sessions end-to-end without support',
+      'Adapts sessions based on client needs and questions',
+      'Creates a positive and professional client experience',
+      'Delivers sessions in a clear, structured way',
+      'Aligns training delivery to best practice',
+      'Can answer client questions or find answers quickly'
+    ],
+    operations: [
+      'Manages the full training lifecycle independently',
+      'Completes training preparation without prompting',
+      'Completes post-session admin accurately and on time',
+      'Keeps the Training Dashboard accurate and up to date',
+      'Keeps Rocketlane accurate and up to date',
+      'Uses HubSpot correctly for client communication, tickets and invoicing',
+      'Escalates issues appropriately when needed'
+    ],
+    accounting: [
+      'Independently completes weekly accounting onboarding reviews',
+      'Identifies clients who need chasing or support',
+      'Chases clients proactively and appropriately',
+      'Identifies blockers and takes action to progress projects',
+      'Escalates risks clearly and at the right time',
+      'Understands project stages and what good looks like at each stage',
+      'Keeps accounting onboarding boards accurate and up to date'
+    ],
+    product: [
+      'Has strong working knowledge of Street Sales workflows',
+      'Has strong working knowledge of Street Lettings workflows',
+      'Has strong working knowledge of Street Accounting workflows',
+      'Understands onboarding workflows and project stages',
+      'Knows where to find answers when unsure',
+      'Can confidently explain processes internally and externally'
+    ],
+    behaviour: [
+      'Proactively manages workload',
+      'Communicates clearly with clients and internal teams',
+      'Takes ownership without needing regular prompting',
+      'Shows strong organisation and attention to detail',
+      'Asks for help when needed, but demonstrates learning',
+      'Shows accountability for tasks, updates and follow-through',
+      'Takes initiative in keeping work moving'
+    ]
+  }
+};
+
+// Status options per stage
+const STATUS_OPTIONS = {
+  '30': ['Not Started', 'In Progress', 'Confident'],
+  '60': ['Not Started', 'In Progress', 'Confident'],
+  '90': ['Not Met', 'Partially Met', 'Met']
+};
+
+// =====================================================================
+// APPLICATION STATE
+// =====================================================================
+let currentMemberId = null;       // ID of currently loaded team member
+let teamMembers = [];             // List of all team members from sheet
+let trackerData = {};             // Current form data (responses, summaries, etc.)
+let originalData = {};            // Snapshot at load time for change detection
+let hasUnsavedChanges = false;    // Whether the form has pending changes
+let activityLog = [];             // Activity log entries for current member
+
+// =====================================================================
+// INITIALISATION
+// =====================================================================
+window.addEventListener('DOMContentLoaded', () => {
+  // Show config warning if URL not set
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    document.getElementById('configAlert').classList.add('show');
+  }
+
+  // Render all expectation rows into the tables
+  renderAllExpectations();
+
+  // Attach change listeners to summary textareas and position radios
+  attachChangeListeners();
+
+  // Load team members from sheet
+  loadTeamMembers();
+});
+
+// =====================================================================
+// RENDER EXPECTATION ROWS
+// Builds the table rows for each stage/section from the EXPECTATIONS data
+// =====================================================================
+function renderAllExpectations() {
+  ['30', '60', '90'].forEach(stage => {
+    Object.keys(EXPECTATIONS[stage]).forEach(section => {
+      const tbody = document.getElementById(`exp_${stage}_${section}`);
+      if (!tbody) return;
+      EXPECTATIONS[stage][section].forEach((text, idx) => {
+        const expId = `${stage}_${section}_${idx}`;
+        const statuses = STATUS_OPTIONS[stage];
+        const row = document.createElement('tr');
+        row.className = 'exp-row';
+        row.innerHTML = `
+          <td class="exp-text-cell">${text}</td>
+          ${statuses.map(s => `
+            <td class="exp-status-cell">
+              <label class="status-label" style="cursor:pointer;">
+                <input type="radio" name="status_${expId}" value="${s}" class="status-radio"
+                  data-expid="${expId}" data-stage="${stage}" data-section="${section}" data-idx="${idx}" data-text="${escapeAttr(text)}"
+                  onchange="markUnsaved()" />
+                &nbsp;
+              </label>
+            </td>`).join('')}
+          <td class="exp-notes-cell">
+            <textarea class="notes-input" id="notes_${expId}" rows="1"
+              placeholder="Notes / evidence…"
+              data-expid="${expId}" data-stage="${stage}" data-section="${section}" data-idx="${idx}"
+              onchange="markUnsaved()" oninput="autoResize(this)"></textarea>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    });
+  });
+}
+
+function escapeAttr(str) {
+  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// =====================================================================
+// CHANGE LISTENERS
+// =====================================================================
+function attachChangeListeners() {
+  // Summary textareas
+  document.querySelectorAll('.summary-textarea').forEach(el => {
+    el.addEventListener('input', markUnsaved);
+  });
+  // Overall position radios
+  document.querySelectorAll('.position-option').forEach(el => {
+    el.addEventListener('change', markUnsaved);
+  });
+  // Team member info fields
+  document.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('input', markUnsaved);
+  });
+}
+
+function markUnsaved() {
+  if (!currentMemberId) return;
+  hasUnsavedChanges = true;
+  setSaveStatus('unsaved', '● Unsaved changes');
+}
+
+// =====================================================================
+// SAVE STATUS
+// =====================================================================
+function setSaveStatus(state, text) {
+  const el = document.getElementById('saveStatus');
+  el.className = state;
+  const dot = el.querySelector('.status-dot');
+  dot.className = 'status-dot' + (state === 'saving' ? ' pulse' : '');
+  el.querySelector('.status-dot').nextSibling.textContent = ' ' + text;
+  // Re-insert text node cleanly
+  el.innerHTML = `<span class="status-dot${state === 'saving' ? ' pulse' : ''}"></span> ${text}`;
+}
+
+// =====================================================================
+// TAB SWITCHING
+// =====================================================================
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// =====================================================================
+// DATE CALCULATIONS
+// =====================================================================
+function updateReviewDates() {
+  const startVal = document.getElementById('tmStartDate').value;
+  if (!startVal) {
+    ['date30', 'date60', 'date90'].forEach(id => document.getElementById(id).textContent = '—');
+    return;
+  }
+  const start = new Date(startVal);
+  const fmt = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+  document.getElementById('date30').textContent = fmt(addDays(start, 30));
+  document.getElementById('date60').textContent = fmt(addDays(start, 60));
+  document.getElementById('date90').textContent = fmt(addDays(start, 90));
+}
+
+// =====================================================================
+// MODAL: NEW TEAM MEMBER
+// =====================================================================
+function openNewMemberModal() {
+  document.getElementById('newMemberModal').classList.add('open');
+  document.getElementById('newName').focus();
+}
+function closeNewMemberModal() {
+  document.getElementById('newMemberModal').classList.remove('open');
+  ['newName','newRole','newStartDate','newManager'].forEach(id => document.getElementById(id).value = '');
+}
+
+function createNewMember() {
+  const name = document.getElementById('newName').value.trim();
+  const role = document.getElementById('newRole').value.trim();
+  const startDate = document.getElementById('newStartDate').value;
+  const manager = document.getElementById('newManager').value.trim();
+
+  if (!name || !startDate) {
+    showToast('Please fill in the team member name and start date.', true);
+    return;
+  }
+
+  // Create a new member object
+  const newMember = {
+    teamMemberId: 'TM_' + Date.now(),
+    teamMemberName: name,
+    role: role,
+    startDate: startDate,
+    managerName: manager,
+    day30OverallPosition: '',
+    day60OverallPosition: '',
+    day90OverallPosition: '',
+    finalOutcome: '',
+    lastUpdated: new Date().toISOString()
+  };
+
+  // Add to local list and select dropdown
+  teamMembers.push(newMember);
+  rebuildMemberDropdown();
+  document.getElementById('memberSelect').value = newMember.teamMemberId;
+
+  closeNewMemberModal();
+  loadMember(); // Will trigger a save since this is new
+
+  hasUnsavedChanges = true;
+  markUnsaved();
+  showToast(`Record created for ${name}.`);
+}
+
+// =====================================================================
+// TEAM MEMBER LOADING
+// =====================================================================
+async function loadTeamMembers() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  showLoading('Loading team members…');
+  try {
+    const res = await appsScriptGet({ action: 'getTeamMembers' });
+    teamMembers = res.teamMembers || [];
+    rebuildMemberDropdown();
+    setSaveStatus('', 'Ready');
+  } catch(e) {
+    showToast('Could not load team members from Google Sheet. Check your Apps Script URL.', true);
+    setSaveStatus('error', 'Connection error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function rebuildMemberDropdown() {
+  const sel = document.getElementById('memberSelect');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Select a team member —</option>';
+  teamMembers.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.teamMemberId;
+    opt.textContent = `${m.teamMemberName} (${m.role || 'No role'})`;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+async function loadMember() {
+  const sel = document.getElementById('memberSelect');
+  const id = sel.value;
+  if (!id) {
+    document.getElementById('setupCard').style.display = 'none';
+    document.getElementById('trackerContent').style.display = 'none';
+    currentMemberId = null;
+    setSaveStatus('', 'No data loaded');
+    return;
+  }
+
+  currentMemberId = id;
+  const member = teamMembers.find(m => m.teamMemberId === id);
+  if (!member) return;
+
+  // Populate info fields
+  document.getElementById('tmName').value = member.teamMemberName || '';
+  document.getElementById('tmRole').value = member.role || '';
+  document.getElementById('tmStartDate').value = member.startDate || '';
+  document.getElementById('tmManager').value = member.managerName || '';
+  document.getElementById('memberHeading').textContent = member.teamMemberName || 'Team Member Details';
+  document.getElementById('memberIdDisplay').textContent = `ID: ${id}`;
+  updateReviewDates();
+
+  // Show UI
+  document.getElementById('setupCard').style.display = '';
+  document.getElementById('trackerContent').style.display = '';
+
+  // Load tracker data from sheet
+  if (APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showLoading('Loading tracker data…');
+    try {
+      const res = await appsScriptGet({ action: 'getTrackerData', teamMemberId: id });
+      trackerData = res;
+      populateForm(trackerData);
+      originalData = captureFormState();
+      hasUnsavedChanges = false;
+      setSaveStatus('saved', 'Loaded from sheet');
+
+      // Populate activity log
+      activityLog = res.activityLog || [];
+      renderActivityLog();
+    } catch(e) {
+      showToast('Could not load tracker data.', true);
+    } finally {
+      hideLoading();
+    }
+  } else {
+    // Demo mode: clear form
+    clearForm();
+    setSaveStatus('unsaved', 'Demo mode — not connected');
+  }
+}
+
+// =====================================================================
+// POPULATE FORM FROM DATA
+// =====================================================================
+function populateForm(data) {
+  clearForm();
+
+  // Overall positions
+  if (data.member) {
+    const m = data.member;
+    setRadio('pos30', m.day30OverallPosition);
+    setRadio('pos60', m.day60OverallPosition);
+    setRadio('finalOutcome', m.finalOutcome);
+  }
+
+  // Responses (status + notes per expectation)
+  if (data.responses) {
+    data.responses.forEach(r => {
+      const expId = `${r.reviewStage}_${r.category}_${r.expectationIdx}`;
+      const radios = document.querySelectorAll(`input[name="status_${expId}"]`);
+      radios.forEach(radio => {
+        if (radio.value === r.status) radio.checked = true;
+      });
+      const notesEl = document.getElementById(`notes_${expId}`);
+      if (notesEl) {
+        notesEl.value = r.notes || '';
+        autoResize(notesEl);
+      }
+    });
+  }
+
+  // Review summaries
+  if (data.summaries) {
+    data.summaries.forEach(s => {
+      const stage = s.reviewStage;
+      if (stage === '30') {
+        setVal('sum_30_going_well', s.whatIsGoingWell);
+        setVal('sum_30_developing', s.areasStillDeveloping);
+        setVal('sum_30_support', s.supportNeeded);
+        setVal('sum_30_actions', s.actionsBeforeNextReview);
+      } else if (stage === '60') {
+        setVal('sum_60_going_well', s.whatIsGoingWell);
+        setVal('sum_60_developing', s.areasStillDeveloping);
+        setVal('sum_60_support', s.supportNeeded);
+        setVal('sum_60_actions', s.actionsBeforeNextReview);
+      } else if (stage === '90') {
+        setVal('sum_90_strengths', s.whatIsGoingWell);
+        setVal('sum_90_development', s.areasStillDeveloping);
+        setVal('sum_90_independent', s.supportNeeded);
+        setVal('sum_90_ownership', s.actionsBeforeNextReview);
+        setVal('sum_90_support', s.supportStillRequired);
+        setVal('sum_90_manager', s.managerComments);
+        setVal('sum_90_member', s.teamMemberComments);
+      }
+    });
+  }
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function setRadio(name, value) {
+  if (!value) return;
+  const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  if (radio) radio.checked = true;
+}
+
+function clearForm() {
+  // Clear all radio statuses for expectations
+  document.querySelectorAll('.status-radio').forEach(r => r.checked = false);
+  // Clear all notes
+  document.querySelectorAll('.notes-input').forEach(n => { n.value = ''; n.style.height = 'auto'; });
+  // Clear summaries
+  document.querySelectorAll('.summary-textarea').forEach(t => t.value = '');
+  // Clear positions
+  document.querySelectorAll('.position-option').forEach(r => r.checked = false);
+}
+
+// =====================================================================
+// CAPTURE FORM STATE (for change tracking)
+// =====================================================================
+function captureFormState() {
+  const state = { statuses: {}, notes: {}, summaries: {}, positions: {} };
+
+  document.querySelectorAll('.status-radio:checked').forEach(r => {
+    state.statuses[r.name] = r.value;
+  });
+  document.querySelectorAll('.notes-input').forEach(n => {
+    state.notes[n.id] = n.value;
+  });
+  document.querySelectorAll('.summary-textarea').forEach(t => {
+    state.summaries[t.id] = t.value;
+  });
+  document.querySelectorAll('.position-option:checked').forEach(r => {
+    state.positions[r.name] = r.value;
+  });
+  // Member info
+  state.memberInfo = {
+    name: document.getElementById('tmName').value,
+    role: document.getElementById('tmRole').value,
+    startDate: document.getElementById('tmStartDate').value,
+    manager: document.getElementById('tmManager').value
+  };
+
+  return state;
+}
+
+// =====================================================================
+// SAVE CHANGES
+// =====================================================================
+async function saveChanges() {
+  if (!currentMemberId) {
+    showToast('Please select or create a team member first.', true);
+    return;
+  }
+
+  const name = document.getElementById('tmName').value.trim();
+  const startDate = document.getElementById('tmStartDate').value;
+  if (!name || !startDate) {
+    showToast('Team member name and start date are required before saving.', true);
+    return;
+  }
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showToast('Please set your Apps Script URL in the code to enable saving.', true);
+    return;
+  }
+
+  setSaveStatus('saving', 'Saving…');
+  showLoading('Saving changes…');
+
+  try {
+    const newState = captureFormState();
+    const changes = detectChanges(originalData, newState);
+
+    // Build payload
+    const payload = buildSavePayload(newState);
+    payload.teamMemberId = currentMemberId;
+    payload.activityLogEntries = changes;
+    payload.updatedBy = name;
+
+    const res = await appsScriptPost({ action: 'saveTrackerData', data: payload });
+
+    if (res.success) {
+      originalData = newState;
+      hasUnsavedChanges = false;
+      setSaveStatus('saved', '✓ Saved');
+
+      // Refresh activity log
+      activityLog = res.activityLog || activityLog;
+      renderActivityLog();
+
+      showToast('Changes saved successfully.');
+    } else {
+      throw new Error(res.error || 'Unknown error');
+    }
+  } catch(e) {
+    setSaveStatus('error', '✗ Save failed');
+    showToast('Save failed: ' + e.message, true);
+  } finally {
+    hideLoading();
+  }
+}
+
+// =====================================================================
+// BUILD SAVE PAYLOAD
+// Assembles all form data into a structured object for the Apps Script
+// =====================================================================
+function buildSavePayload(state) {
+  const member = teamMembers.find(m => m.teamMemberId === currentMemberId) || {};
+
+  // Member info
+  const memberData = {
+    teamMemberId: currentMemberId,
+    teamMemberName: document.getElementById('tmName').value.trim(),
+    role: document.getElementById('tmRole').value.trim(),
+    startDate: document.getElementById('tmStartDate').value,
+    managerName: document.getElementById('tmManager').value.trim(),
+    day30OverallPosition: state.positions['pos30'] || '',
+    day60OverallPosition: state.positions['pos60'] || '',
+    finalOutcome: state.positions['finalOutcome'] || ''
+  };
+
+  // Calculate review dates
+  if (memberData.startDate) {
+    const start = new Date(memberData.startDate);
+    const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+    memberData.day30Date = addDays(start, 30).toISOString().split('T')[0];
+    memberData.day60Date = addDays(start, 60).toISOString().split('T')[0];
+    memberData.day90Date = addDays(start, 90).toISOString().split('T')[0];
+  }
+
+  // Responses
+  const responses = [];
+  document.querySelectorAll('.status-radio').forEach(r => {
+    if (r.checked) {
+      const expId = r.dataset.expid;
+      const notesEl = document.getElementById(`notes_${expId}`);
+      responses.push({
+        teamMemberId: currentMemberId,
+        reviewStage: r.dataset.stage,
+        category: r.dataset.section,
+        expectationIdx: r.dataset.idx,
+        expectationText: r.dataset.text,
+        status: r.value,
+        notes: notesEl ? notesEl.value : ''
+      });
+    }
+  });
+
+  // Also save notes for unchecked expectations
+  document.querySelectorAll('.notes-input').forEach(n => {
+    if (n.value.trim()) {
+      const expId = n.dataset.expid;
+      // Check if already captured from radio
+      const exists = responses.find(r => `${r.reviewStage}_${r.category}_${r.expectationIdx}` === expId);
+      if (!exists) {
+        responses.push({
+          teamMemberId: currentMemberId,
+          reviewStage: n.dataset.stage,
+          category: n.dataset.section,
+          expectationIdx: n.dataset.idx,
+          expectationText: EXPECTATIONS[n.dataset.stage]?.[n.dataset.section]?.[n.dataset.idx] || '',
+          status: '',
+          notes: n.value
+        });
+      } else {
+        // Update notes on existing entry
+        exists.notes = n.value;
+      }
+    }
+  });
+
+  // Summaries
+  const summaries = [
+    {
+      teamMemberId: currentMemberId,
+      reviewStage: '30',
+      whatIsGoingWell: document.getElementById('sum_30_going_well').value,
+      areasStillDeveloping: document.getElementById('sum_30_developing').value,
+      supportNeeded: document.getElementById('sum_30_support').value,
+      actionsBeforeNextReview: document.getElementById('sum_30_actions').value
+    },
+    {
+      teamMemberId: currentMemberId,
+      reviewStage: '60',
+      whatIsGoingWell: document.getElementById('sum_60_going_well').value,
+      areasStillDeveloping: document.getElementById('sum_60_developing').value,
+      supportNeeded: document.getElementById('sum_60_support').value,
+      actionsBeforeNextReview: document.getElementById('sum_60_actions').value
+    },
+    {
+      teamMemberId: currentMemberId,
+      reviewStage: '90',
+      whatIsGoingWell: document.getElementById('sum_90_strengths').value,
+      areasStillDeveloping: document.getElementById('sum_90_development').value,
+      supportNeeded: document.getElementById('sum_90_independent').value,
+      actionsBeforeNextReview: document.getElementById('sum_90_ownership').value,
+      supportStillRequired: document.getElementById('sum_90_support').value,
+      managerComments: document.getElementById('sum_90_manager').value,
+      teamMemberComments: document.getElementById('sum_90_member').value
+    }
+  ];
+
+  return { member: memberData, responses, summaries };
+}
+
+// =====================================================================
+// CHANGE DETECTION
+// Compares old state vs new state and returns array of change log entries
+// =====================================================================
+function detectChanges(old, newState) {
+  const changes = [];
+  const now = new Date().toISOString();
+  const memberName = document.getElementById('tmName').value;
+
+  if (!old || !old.statuses) return changes;
+
+  // Check status changes
+  const allRadioNames = new Set([
+    ...Object.keys(old.statuses || {}),
+    ...Object.keys(newState.statuses || {})
+  ]);
+  allRadioNames.forEach(name => {
+    const oldVal = (old.statuses || {})[name] || '';
+    const newVal = (newState.statuses || {})[name] || '';
+    if (oldVal !== newVal) {
+      const parts = name.replace('status_', '').split('_');
+      changes.push({
+        timestamp: now,
+        teamMemberId: currentMemberId,
+        teamMemberName: memberName,
+        reviewStage: parts[0],
+        category: parts[1],
+        fieldChanged: `Status — Expectation ${parseInt(parts[2]) + 1}`,
+        oldValue: oldVal || '(none)',
+        newValue: newVal || '(cleared)'
+      });
+    }
+  });
+
+  // Check notes changes
+  Object.keys(newState.notes || {}).forEach(id => {
+    const oldVal = (old.notes || {})[id] || '';
+    const newVal = (newState.notes || {})[id] || '';
+    if (oldVal !== newVal) {
+      const parts = id.replace('notes_', '').split('_');
+      changes.push({
+        timestamp: now,
+        teamMemberId: currentMemberId,
+        teamMemberName: memberName,
+        reviewStage: parts[0],
+        category: parts[1],
+        fieldChanged: `Notes — Expectation ${parseInt(parts[2]) + 1}`,
+        oldValue: oldVal || '(empty)',
+        newValue: newVal || '(cleared)'
+      });
+    }
+  });
+
+  // Check summary changes
+  Object.keys(newState.summaries || {}).forEach(id => {
+    const oldVal = (old.summaries || {})[id] || '';
+    const newVal = (newState.summaries || {})[id] || '';
+    if (oldVal !== newVal) {
+      const el = document.getElementById(id);
+      changes.push({
+        timestamp: now,
+        teamMemberId: currentMemberId,
+        teamMemberName: memberName,
+        reviewStage: el?.dataset?.stage || '',
+        category: 'Summary',
+        fieldChanged: el?.labels?.[0]?.textContent || id,
+        oldValue: oldVal || '(empty)',
+        newValue: newVal || '(cleared)'
+      });
+    }
+  });
+
+  // Check position changes
+  Object.keys(newState.positions || {}).forEach(name => {
+    const oldVal = (old.positions || {})[name] || '';
+    const newVal = (newState.positions || {})[name] || '';
+    if (oldVal !== newVal) {
+      const labels = { pos30: '30 Day Overall Position', pos60: '60 Day Overall Position', finalOutcome: 'Final Outcome' };
+      changes.push({
+        timestamp: now,
+        teamMemberId: currentMemberId,
+        teamMemberName: memberName,
+        reviewStage: name === 'finalOutcome' ? '90' : name.replace('pos', ''),
+        category: 'Overall Position',
+        fieldChanged: labels[name] || name,
+        oldValue: oldVal || '(none)',
+        newValue: newVal || '(cleared)'
+      });
+    }
+  });
+
+  return changes;
+}
+
+// =====================================================================
+// REFRESH FROM SHEET
+// =====================================================================
+async function refreshFromSheet() {
+  if (!currentMemberId) {
+    loadTeamMembers();
+    return;
+  }
+  if (hasUnsavedChanges) {
+    if (!confirm('You have unsaved changes. Refreshing will discard them. Continue?')) return;
+  }
+  await loadMember();
+}
+
+// =====================================================================
+// ACTIVITY LOG RENDERING
+// =====================================================================
+function renderActivityLog() {
+  const container = document.getElementById('logContainer');
+  document.getElementById('logCount').textContent = activityLog.length ? `${activityLog.length} entries` : '';
+
+  if (!activityLog.length) {
+    container.innerHTML = '<div class="log-empty">No activity logged yet for this team member.</div>';
+    return;
+  }
+
+  const sorted = [...activityLog].reverse(); // Most recent first
+
+  container.innerHTML = `
+    <div class="log-table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>Stage</th>
+            <th>Section</th>
+            <th>Field Changed</th>
+            <th>Old Value</th>
+            <th>New Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(entry => `
+            <tr>
+              <td style="white-space:nowrap;">${formatDateTime(entry.timestamp)}</td>
+              <td>${entry.reviewStage ? `Day ${entry.reviewStage}` : '—'}</td>
+              <td>${entry.category || '—'}</td>
+              <td>${entry.fieldChanged || '—'}</td>
+              <td style="color:var(--danger);">${entry.oldValue || '—'}</td>
+              <td style="color:var(--success);">${entry.newValue || '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function formatDateTime(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    return new Date(isoStr).toLocaleString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch(e) { return isoStr; }
+}
+
+// =====================================================================
+// API HELPERS
+// These functions call the Google Apps Script Web App
+// =====================================================================
+async function appsScriptGet(params) {
+  const url = new URL(APPS_SCRIPT_URL);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function appsScriptPost(params) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    redirect: 'follow',
+    body: JSON.stringify(params),
+    headers: { 'Content-Type': 'text/plain' } // text/plain avoids CORS preflight
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// =====================================================================
+// LOADING OVERLAY
+// =====================================================================
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text || 'Loading…';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+// =====================================================================
+// TOAST NOTIFICATION
+// =====================================================================
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = isError ? 'show error' : 'show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = isError ? 'error' : ''; }, 4000);
+}
+
+// =====================================================================
+// BEFORE UNLOAD WARNING
+// =====================================================================
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+</script>
+</body>
+</html>
