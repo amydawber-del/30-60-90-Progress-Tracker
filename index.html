@@ -351,9 +351,9 @@
       vertical-align: top;
     }
     .exp-status-cell {
-      padding: 12px 8px;
+      padding: 10px 6px;
       text-align: center;
-      vertical-align: top;
+      vertical-align: middle;
     }
     .exp-notes-cell {
       padding: 10px 22px 10px 8px;
@@ -388,7 +388,7 @@
     .status-label {
       font-size: 11.5px;
       font-weight: 500;
-      padding: 4px 10px;
+      padding: 5px 11px;
       border-radius: 20px;
       cursor: pointer;
       border: 1.5px solid var(--border);
@@ -396,19 +396,18 @@
       transition: all 0.15s;
       white-space: nowrap;
       user-select: none;
-      display: block;
+      display: inline-block;
+      text-align: center;
     }
-    .status-label:hover { border-color: var(--accent); color: var(--accent); }
+    .status-label:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
 
-    /* Status colours for 30/60 day */
-    input[value="Not Started"]:checked + .status-label { background: #f3f3f3; border-color: #999; color: #444; }
-    input[value="In Progress"]:checked + .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
-    input[value="Confident"]:checked + .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
-
-    /* Status colours for 90 day */
-    input[value="Not Met"]:checked + .status-label { background: var(--danger-pale); border-color: var(--danger); color: var(--danger); }
-    input[value="Partially Met"]:checked + .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); }
-    input[value="Met"]:checked + .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); }
+    /* Status colours — applied via JS class on the <td> */
+    .exp-status-cell.sel-not-started .status-label { background: #f0f0f0; border-color: #888; color: #333; font-weight: 600; }
+    .exp-status-cell.sel-in-progress .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); font-weight: 600; }
+    .exp-status-cell.sel-confident    .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); font-weight: 600; }
+    .exp-status-cell.sel-not-met      .status-label { background: var(--danger-pale); border-color: var(--danger); color: var(--danger); font-weight: 600; }
+    .exp-status-cell.sel-partially-met .status-label { background: var(--warn-pale); border-color: var(--warn); color: var(--warn); font-weight: 600; }
+    .exp-status-cell.sel-met          .status-label { background: var(--success-pale); border-color: var(--success); color: var(--success); font-weight: 600; }
 
     /* ===================== SUMMARY SECTION ===================== */
     .summary-section {
@@ -703,6 +702,109 @@
       .exp-text-cell { padding-left: 14px; }
     }
 
+    /* ===================== TAB BADGE ===================== */
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      min-width: 17px;
+      height: 17px;
+      border-radius: 20px;
+      padding: 0 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .tab-badge:empty { display: none; }
+
+    /* ===================== 1:1 ENTRIES ===================== */
+    .one-to-one-entry {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 22px;
+      transition: background 0.15s;
+    }
+    .one-to-one-entry:last-child { border-bottom: none; }
+    .one-to-one-entry:hover { background: var(--surface-2); }
+    .oto-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .oto-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .oto-date {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .oto-type-badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--accent-pale);
+      color: var(--accent);
+      border: 1px solid #b8d8cc;
+    }
+    .oto-sentiment {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .oto-sentiment.on-track    { background: var(--success-pale); color: var(--success); border: 1px solid #a8d8c0; }
+    .oto-sentiment.watch       { background: var(--warn-pale); color: var(--warn); border: 1px solid #f0c070; }
+    .oto-sentiment.concern     { background: var(--danger-pale); color: var(--danger); border: 1px solid #e8b0b0; }
+    .oto-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .oto-field { display: flex; flex-direction: column; gap: 4px; }
+    .oto-field-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+    }
+    .oto-field-value {
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .oto-field-value:empty::after { content: "—"; color: var(--text-light); }
+    .oto-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-icon {
+      font-family: var(--font-body);
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: white;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-icon.delete:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-pale); }
+
     /* ===================== SECTION ICONS ===================== */
     .icon-delivery { background: #e8f0ff; color: #2c4a7c; }
     .icon-ops { background: #f0e8ff; color: #5c3a7c; }
@@ -759,6 +861,55 @@
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeNewMemberModal()">Cancel</button>
       <button class="btn btn-primary" style="background:var(--accent);color:white;" onclick="createNewMember()">Create Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 1:1 ENTRY MODAL ====== -->
+<div class="modal-overlay" id="oneToOneModal">
+  <div class="modal" style="max-width:560px;">
+    <h3 id="otoModalTitle">Add 1:1 Entry</h3>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field-group">
+          <label>Date *</label>
+          <input type="date" id="otoDate" />
+        </div>
+        <div class="field-group">
+          <label>Meeting Type *</label>
+          <select id="otoType">
+            <option value="">— Select —</option>
+            <option value="1:1">1:1</option>
+            <option value="Catch-up">Catch-up</option>
+            <option value="Probation check-in">Probation check-in</option>
+            <option value="Informal chat">Informal chat</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Sentiment / Manager Rating</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;">
+          <input type="radio" name="otoSentiment" id="otoSent1" value="On track" style="display:none;" />
+          <label for="otoSent1" class="position-label" style="font-size:13px;padding:7px 14px;">✓ On track</label>
+          <input type="radio" name="otoSentiment" id="otoSent2" value="One to watch" style="display:none;" />
+          <label for="otoSent2" class="position-label" style="font-size:13px;padding:7px 14px;">~ One to watch</label>
+          <input type="radio" name="otoSentiment" id="otoSent3" value="Cause for concern" style="display:none;" />
+          <label for="otoSent3" class="position-label" style="font-size:13px;padding:7px 14px;">⚠ Cause for concern</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Notes / What was discussed</label>
+        <textarea class="summary-textarea" id="otoNotes" placeholder="Key topics, context, observations…" style="min-height:90px;"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Actions agreed / Follow-ups</label>
+        <textarea class="summary-textarea" id="otoActions" placeholder="Action points, who owns them, by when…" style="min-height:70px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeOneToOneModal()">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--accent);color:white;" onclick="saveOneToOneEntry()">Save Entry</button>
     </div>
   </div>
 </div>
@@ -821,6 +972,7 @@
         <button class="tab active" onclick="switchTab('tab30', this)">30 Day Review</button>
         <button class="tab" onclick="switchTab('tab60', this)">60 Day Review</button>
         <button class="tab" onclick="switchTab('tab90', this)">90 Day Review</button>
+        <button class="tab" onclick="switchTab('tab1to1', this)">1:1 Reviews <span id="oneToOneCount" class="tab-badge"></span></button>
         <button class="tab" onclick="switchTab('tabRef', this)">Reference</button>
         <button class="tab" onclick="switchTab('tabLog', this)">Activity Log</button>
       </div>
@@ -1215,6 +1367,19 @@
       </div>
     </div><!-- end tabRef -->
 
+    <!-- ============================== 1:1 REVIEWS TAB ============================== -->
+    <div class="tab-panel" id="tab1to1">
+      <div class="card">
+        <div class="card-header">
+          <h2>1:1 Reviews &amp; Check-ins</h2>
+          <button class="btn btn-primary" style="background:var(--accent);color:white;" onclick="openOneToOneModal()">+ Add Entry</button>
+        </div>
+        <div id="oneToOneList">
+          <div class="log-empty" id="oneToOneEmpty">No 1:1 entries yet. Click <strong>Add Entry</strong> to log your first check-in.</div>
+        </div>
+      </div>
+    </div><!-- end tab1to1 -->
+
     <!-- ============================== ACTIVITY LOG TAB ============================== -->
     <div class="tab-panel activity-log-section" id="tabLog">
       <div class="card">
@@ -1411,15 +1576,17 @@ function renderAllExpectations() {
         row.className = 'exp-row';
         row.innerHTML = `
           <td class="exp-text-cell">${text}</td>
-          ${statuses.map(s => `
-            <td class="exp-status-cell">
-              <label class="status-label" style="cursor:pointer;">
-                <input type="radio" name="status_${expId}" value="${s}" class="status-radio"
-                  data-expid="${expId}" data-stage="${stage}" data-section="${section}" data-idx="${idx}" data-text="${escapeAttr(text)}"
-                  onchange="markUnsaved()" />
-                &nbsp;
-              </label>
-            </td>`).join('')}
+          ${statuses.map((s, si) => {
+            const radioId = `radio_${expId}_${si}`;
+            return `
+            <td class="exp-status-cell" id="cell_${expId}_${si}">
+              <input type="radio" name="status_${expId}" id="${radioId}" value="${s}" class="status-radio"
+                data-expid="${expId}" data-stage="${stage}" data-section="${section}" data-idx="${idx}"
+                data-cellprefix="cell_${expId}" data-si="${si}" data-text="${escapeAttr(text)}"
+                onchange="onStatusChange(this)" />
+              <label for="${radioId}" class="status-label">${s}</label>
+            </td>`;
+          }).join('')}
           <td class="exp-notes-cell">
             <textarea class="notes-input" id="notes_${expId}" rows="1"
               placeholder="Notes / evidence…"
@@ -1435,6 +1602,40 @@ function renderAllExpectations() {
 
 function escapeAttr(str) {
   return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Maps status values to CSS class names
+const STATUS_CLASS_MAP = {
+  'Not Started':   'sel-not-started',
+  'In Progress':   'sel-in-progress',
+  'Confident':     'sel-confident',
+  'Not Met':       'sel-not-met',
+  'Partially Met': 'sel-partially-met',
+  'Met':           'sel-met'
+};
+
+// Called when a status radio changes — clears siblings, highlights selected cell
+function onStatusChange(radio) {
+  const prefix = radio.dataset.cellprefix;
+  const totalCells = STATUS_OPTIONS[radio.dataset.stage].length;
+  // Clear all cells in this row
+  for (let i = 0; i < totalCells; i++) {
+    const cell = document.getElementById(`${prefix}_${i}`);
+    if (cell) cell.className = 'exp-status-cell';
+  }
+  // Highlight the selected cell
+  const selectedCell = document.getElementById(`${prefix}_${radio.dataset.si}`);
+  if (selectedCell) {
+    selectedCell.className = 'exp-status-cell ' + (STATUS_CLASS_MAP[radio.value] || '');
+  }
+  markUnsaved();
+}
+
+// Re-applies highlights after loading saved data (called after populateForm)
+function reapplyStatusHighlights() {
+  document.querySelectorAll('.status-radio:checked').forEach(radio => {
+    onStatusChange(radio);
+  });
 }
 
 function autoResize(el) {
@@ -1623,6 +1824,7 @@ async function loadMember() {
       const res = await appsScriptGet({ action: 'getTrackerData', teamMemberId: id });
       trackerData = res;
       populateForm(trackerData);
+      reapplyStatusHighlights();
       originalData = captureFormState();
       hasUnsavedChanges = false;
       setSaveStatus('saved', 'Loaded from sheet');
@@ -1630,6 +1832,10 @@ async function loadMember() {
       // Populate activity log
       activityLog = res.activityLog || [];
       renderActivityLog();
+
+      // Populate 1:1 entries
+      oneToOneEntries = res.oneToOneEntries || [];
+      renderOneToOneEntries();
     } catch(e) {
       showToast('Could not load tracker data.', true);
     } finally {
@@ -1713,12 +1919,17 @@ function setRadio(name, value) {
 function clearForm() {
   // Clear all radio statuses for expectations
   document.querySelectorAll('.status-radio').forEach(r => r.checked = false);
+  // Clear all status cell highlights
+  document.querySelectorAll('.exp-status-cell').forEach(c => c.className = 'exp-status-cell');
   // Clear all notes
   document.querySelectorAll('.notes-input').forEach(n => { n.value = ''; n.style.height = 'auto'; });
   // Clear summaries
   document.querySelectorAll('.summary-textarea').forEach(t => t.value = '');
   // Clear positions
   document.querySelectorAll('.position-option').forEach(r => r.checked = false);
+  // Clear 1:1 entries
+  oneToOneEntries = [];
+  renderOneToOneEntries();
 }
 
 // =====================================================================
@@ -1794,6 +2005,12 @@ async function saveChanges() {
       // Refresh activity log
       activityLog = res.activityLog || activityLog;
       renderActivityLog();
+
+      // Refresh 1:1 entries from server response
+      if (res.oneToOneEntries) {
+        oneToOneEntries = res.oneToOneEntries;
+        renderOneToOneEntries();
+      }
 
       showToast('Changes saved successfully.');
     } else {
@@ -1907,7 +2124,7 @@ function buildSavePayload(state) {
     }
   ];
 
-  return { member: memberData, responses, summaries };
+  return { member: memberData, responses, summaries, oneToOneEntries };
 }
 
 // =====================================================================
@@ -2115,6 +2332,170 @@ function showToast(msg, isError) {
   el.className = isError ? 'show error' : 'show';
   clearTimeout(el._t);
   el._t = setTimeout(() => { el.className = isError ? 'error' : ''; }, 4000);
+}
+
+// =====================================================================
+// 1:1 REVIEWS — STATE & HELPERS
+// =====================================================================
+let oneToOneEntries = [];     // All 1:1 entries for the current team member
+let editingOneToOneId = null; // ID of entry being edited (null = new)
+
+// Sentiment value → CSS class
+const SENTIMENT_CLASS = {
+  'On track':          'on-track',
+  'One to watch':      'watch',
+  'Cause for concern': 'concern'
+};
+
+// =====================================================================
+// 1:1 MODAL — OPEN / CLOSE
+// =====================================================================
+function openOneToOneModal(entryId) {
+  editingOneToOneId = entryId || null;
+  document.getElementById('otoModalTitle').textContent = entryId ? 'Edit 1:1 Entry' : 'Add 1:1 Entry';
+
+  if (entryId) {
+    // Pre-fill for editing
+    const entry = oneToOneEntries.find(e => e.id === entryId);
+    if (!entry) return;
+    document.getElementById('otoDate').value    = entry.date || '';
+    document.getElementById('otoType').value    = entry.meetingType || '';
+    document.getElementById('otoNotes').value   = entry.notes || '';
+    document.getElementById('otoActions').value = entry.actions || '';
+    const sentRadio = document.querySelector(`input[name="otoSentiment"][value="${entry.sentiment}"]`);
+    if (sentRadio) sentRadio.checked = true;
+  } else {
+    // Default date to today
+    document.getElementById('otoDate').value    = new Date().toISOString().split('T')[0];
+    document.getElementById('otoType').value    = '';
+    document.getElementById('otoNotes').value   = '';
+    document.getElementById('otoActions').value = '';
+    document.querySelectorAll('input[name="otoSentiment"]').forEach(r => r.checked = false);
+  }
+
+  document.getElementById('oneToOneModal').classList.add('open');
+  document.getElementById('otoDate').focus();
+}
+
+function closeOneToOneModal() {
+  document.getElementById('oneToOneModal').classList.remove('open');
+  editingOneToOneId = null;
+}
+
+// =====================================================================
+// 1:1 SAVE ENTRY
+// =====================================================================
+function saveOneToOneEntry() {
+  const date    = document.getElementById('otoDate').value;
+  const type    = document.getElementById('otoType').value;
+  const notes   = document.getElementById('otoNotes').value.trim();
+  const actions = document.getElementById('otoActions').value.trim();
+  const sentEl  = document.querySelector('input[name="otoSentiment"]:checked');
+  const sentiment = sentEl ? sentEl.value : '';
+
+  if (!date || !type) {
+    showToast('Please fill in the date and meeting type.', true);
+    return;
+  }
+
+  if (editingOneToOneId) {
+    // Update existing entry
+    const idx = oneToOneEntries.findIndex(e => e.id === editingOneToOneId);
+    if (idx > -1) {
+      oneToOneEntries[idx] = { ...oneToOneEntries[idx], date, meetingType: type, notes, actions, sentiment, lastUpdated: new Date().toISOString() };
+    }
+  } else {
+    // Create new entry
+    const entry = {
+      id:          'OTO_' + Date.now(),
+      teamMemberId: currentMemberId,
+      date,
+      meetingType: type,
+      notes,
+      actions,
+      sentiment,
+      createdAt:   new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
+    oneToOneEntries.push(entry);
+  }
+
+  closeOneToOneModal();
+  renderOneToOneEntries();
+  markUnsaved();
+  showToast(editingOneToOneId ? 'Entry updated.' : 'Entry added.');
+  editingOneToOneId = null;
+}
+
+// =====================================================================
+// 1:1 DELETE ENTRY
+// =====================================================================
+function deleteOneToOneEntry(entryId) {
+  if (!confirm('Delete this 1:1 entry? This cannot be undone.')) return;
+  oneToOneEntries = oneToOneEntries.filter(e => e.id !== entryId);
+  renderOneToOneEntries();
+  markUnsaved();
+  showToast('Entry deleted.');
+}
+
+// =====================================================================
+// 1:1 RENDER ENTRIES
+// Renders all entries sorted newest first
+// =====================================================================
+function renderOneToOneEntries() {
+  const container = document.getElementById('oneToOneList');
+  const badge = document.getElementById('oneToOneCount');
+  const count = oneToOneEntries.length;
+
+  // Update tab badge
+  badge.textContent = count > 0 ? count : '';
+
+  if (count === 0) {
+    container.innerHTML = '<div class="log-empty" id="oneToOneEmpty">No 1:1 entries yet. Click <strong>Add Entry</strong> to log your first check-in.</div>';
+    return;
+  }
+
+  // Sort newest first by date
+  const sorted = [...oneToOneEntries].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  container.innerHTML = sorted.map(entry => {
+    const sentClass = SENTIMENT_CLASS[entry.sentiment] || '';
+    const sentBadge = entry.sentiment
+      ? `<span class="oto-sentiment ${sentClass}">${entry.sentiment}</span>`
+      : '';
+    const formattedDate = entry.date
+      ? new Date(entry.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+
+    return `
+      <div class="one-to-one-entry">
+        <div class="oto-header">
+          <div class="oto-meta">
+            <span class="oto-date">${formattedDate}</span>
+            <span class="oto-type-badge">${entry.meetingType || ''}</span>
+            ${sentBadge}
+          </div>
+          <div class="oto-actions">
+            <button class="btn-icon" onclick="openOneToOneModal('${entry.id}')">✏ Edit</button>
+            <button class="btn-icon delete" onclick="deleteOneToOneEntry('${entry.id}')">✕ Delete</button>
+          </div>
+        </div>
+        <div class="oto-body">
+          <div class="oto-field">
+            <span class="oto-field-label">Notes / Discussed</span>
+            <span class="oto-field-value">${escapeHtml(entry.notes || '')}</span>
+          </div>
+          <div class="oto-field">
+            <span class="oto-field-label">Actions / Follow-ups</span>
+            <span class="oto-field-value">${escapeHtml(entry.actions || '')}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // =====================================================================
