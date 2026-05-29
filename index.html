@@ -21638,7 +21638,7 @@ function populateFromServer(data) {
       if (!responses[stage]) responses[stage] = {};
       if (!responses[stage][section]) responses[stage][section] = {};
       responses[stage][section][idx] = {
-        score:       r.score || 0,
+        score:       r.score ? parseInt(r.score, 10) : 0,
         notes:       r.notes || '',
         followUp: {
           blocker:    r.blockerReason    || '',
@@ -21652,7 +21652,7 @@ function populateFromServer(data) {
       };
 
       const expId = `${stage}_${section}_${idx}`;
-      if (r.score) setScore(expId, r.score);
+      if (r.score) setScore(expId, parseInt(r.score, 10));
       const notesEl = document.getElementById(`notes_${expId}`);
       if (notesEl) { notesEl.value = r.notes || ''; autoResize(notesEl); }
       restoreFollowUp(expId, responses[stage][section][idx].followUp);
