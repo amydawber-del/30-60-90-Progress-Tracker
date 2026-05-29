@@ -21312,6 +21312,7 @@ function updateCarriedBanners() {
 // DASHBOARD
 // =====================================================================
 function refreshDashboard() {
+  console.log('[Tracker] refreshDashboard called. responses keys:', JSON.stringify(Object.keys(responses)));
   let total = 0, scored = 0, sumScores = 0, below4 = 0, above4 = 0;
   let cfCount = 0, resolvedCount = 0;
   const sectionSums = {};
@@ -21611,7 +21612,8 @@ async function loadMember() {
       oneToOneEntries = res.oneToOneEntries || [];
       renderOneToOneEntries();
     } catch(e) {
-      showToast('Could not load tracker data.',true);
+      console.error('[Tracker] loadMember error:', e);
+      showToast('Could not load tracker data: ' + e.message, true);
     } finally { hideLoading(); }
   } else {
     clearForm();
@@ -21623,6 +21625,12 @@ async function loadMember() {
 // POPULATE FROM SERVER DATA
 // =====================================================================
 function populateFromServer(data) {
+  console.log('[Tracker] populateFromServer called. Keys:', Object.keys(data));
+  console.log('[Tracker] responses count:', data.responses ? data.responses.length : 0);
+  console.log('[Tracker] summaries count:', data.summaries ? data.summaries.length : 0);
+  if (data.responses && data.responses.length > 0) {
+    console.log('[Tracker] First response sample:', JSON.stringify(data.responses[0]));
+  }
   clearForm();
 
   if (data.member) {
@@ -21642,7 +21650,7 @@ function populateFromServer(data) {
       if (!responses[stage]) responses[stage] = {};
       if (!responses[stage][section]) responses[stage][section] = {};
       responses[stage][section][idx] = {
-        score:       r.score ? parseInt(r.score, 10) : 0,
+        score:       r.score ? parseInt(r.score, 10) : null,
         notes:       r.notes || '',
         followUp: {
           blocker:    r.blockerReason    || '',
@@ -21656,6 +21664,7 @@ function populateFromServer(data) {
       };
 
       const expId = `${stage}_${section}_${idx}`;
+      console.log(`[Tracker] expId=${expId} score=${r.score} parsed=${parseInt(r.score,10)} notesElExists=${!!document.getElementById('notes_'+expId)} scoreBtnExists=${!!document.getElementById('scorebtn_'+expId)}`);
       if (r.score) setScore(expId, parseInt(r.score, 10));
       const notesEl = document.getElementById(`notes_${expId}`);
       if (notesEl) { notesEl.value = r.notes || ''; autoResize(notesEl); }
