@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>30/60/90 Day Progress Tracker</title>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
   <style>
@@ -929,7 +930,7 @@
       <option value="">— Select a team member —</option>
     </select>
     <button class="btn btn-outline" onclick="openNewMemberModal()">+ New Record</button>
-    <button class="btn btn-outline" onclick="window.print()">🖨 Print / Export PDF</button>
+    <button class="btn btn-outline" onclick="exportToWord()" id="exportWordBtn">📄 Export Word Doc</button>
   </div>
 
   <!-- TEAM MEMBER INFO CARD -->
@@ -2507,6 +2508,472 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = '';
   }
 });
+
+// =====================================================================
+// EXPORT TO WORD
+// Generates a .docx file from the current form state using docx.js
+// =====================================================================
+async function exportToWord() {
+  if (!currentMemberId) {
+    showToast('Please select a team member before exporting.', true);
+    return;
+  }
+  if (typeof docx === 'undefined') {
+    showToast('Word export library not loaded. Check your internet connection.', true);
+    return;
+  }
+
+  const btn = document.getElementById('exportWordBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+
+  try {
+    const {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType,
+      VerticalAlign, LevelFormat
+    } = docx;
+
+    // ── Colours ──────────────────────────────────────────────────────
+    const C = {
+      accent:'1d4b3e', day30:'2c4a7c', day60:'5c3a7c', day90:'1d4b3e',
+      d30pale:'EBF0F8', d60pale:'F2EDF8', d90pale:'E8F0ED',
+      warn:'b85c00', danger:'8b1a1a',
+      border:'D0CCC4', light:'F5F4F1', white:'FFFFFF',
+      muted:'6B6760', text:'1A1916',
+    };
+
+    const PAGE_W = 12240, PAGE_H = 15840, MARGIN = 1080;
+    const CONTENT_W = PAGE_W - MARGIN * 2;
+
+    const thin = { style: BorderStyle.SINGLE, size: 1, color: C.border };
+    const none = { style: BorderStyle.NONE,   size: 0, color: C.white };
+    const bAll  = { top: thin, bottom: thin, left: thin, right: thin };
+    const bNone = { top: none, bottom: none, left: none, right: none };
+
+    const sp = (b=0,a=0) => ({ spacing:{ before:b, after:a } });
+
+    const t = (text, o={}) => new TextRun({ text, font:'Calibri', size:20, color:C.text, ...o });
+
+    const p = (runs, opts={}) => new Paragraph({
+      children: Array.isArray(runs) ? runs : [runs], ...opts
+    });
+
+    const blankRow = () => p(t(''), sp(80,80));
+
+    // ── Cell helper ──────────────────────────────────────────────────
+    const cell = (children, width, opts={}) => new TableCell({
+      width: { size: width, type: WidthType.DXA },
+      borders: bAll,
+      margins: { top:80, bottom:80, left:120, right:120 },
+      children,
+      ...opts
+    });
+
+    // ── Info table ───────────────────────────────────────────────────
+    const memberName  = document.getElementById('tmName').value || '—';
+    const memberRole  = document.getElementById('tmRole').value || '—';
+    const memberStart = document.getElementById('tmStartDate').value || '—';
+    const memberMgr   = document.getElementById('tmManager').value || '—';
+    const d30txt      = document.getElementById('date30').textContent || '—';
+    const d60txt      = document.getElementById('date60').textContent || '—';
+    const d90txt      = document.getElementById('date90').textContent || '—';
+
+    const infoRows = [
+      ['Team Member Name', memberName],
+      ['Role / Job Title',  memberRole],
+      ['Start Date',        memberStart],
+      ['Manager Name',      memberMgr],
+      ['30 Day Review',     d30txt],
+      ['60 Day Review',     d60txt],
+      ['90 Day Review',     d90txt],
+    ];
+    const col0=3200, col1=CONTENT_W-3200;
+    const infoTable = new Table({
+      width:{ size:CONTENT_W, type:WidthType.DXA },
+      columnWidths:[col0,col1],
+      rows: infoRows.map(([lbl,val],i) => new TableRow({ children:[
+        cell([p(t(lbl,{bold:true,size:20}))], col0, { shading:{ fill:C.light, type:ShadingType.CLEAR } }),
+        cell([p(t(val,{size:20}))],           col1, { shading:{ fill: i%2===0?C.white:'F5F4F1', type:ShadingType.CLEAR } }),
+      ]}))
+    });
+
+    // ── Stage banner ─────────────────────────────────────────────────
+    const stageBanner = (tag, title, desc, bg, headCol) => new Table({
+      width:{ size:CONTENT_W, type:WidthType.DXA },
+      columnWidths:[CONTENT_W],
+      rows:[new TableRow({ children:[new TableCell({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        shading:{ fill:bg, type:ShadingType.CLEAR },
+        borders: bNone,
+        margins:{ top:160, bottom:160, left:200, right:200 },
+        children:[
+          p(t(tag,{bold:true,size:18,color:C.white,allCaps:true}),
+            { shading:{ fill:headCol, type:ShadingType.CLEAR }, ...sp(0,80) }),
+          p(t(title,{bold:true,size:28,color:headCol}), sp(0,60)),
+          p(t(desc,{size:19,color:C.muted,italics:true})),
+        ],
+      })})]},
+    });
+
+    // ── Section bar ──────────────────────────────────────────────────
+    const sectionBar = (text) => new Table({
+      width:{ size:CONTENT_W, type:WidthType.DXA },
+      columnWidths:[CONTENT_W],
+      rows:[new TableRow({ children:[new TableCell({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        shading:{ fill:'EAEAEA', type:ShadingType.CLEAR },
+        borders:{ top:thin, bottom:thin, left:none, right:none },
+        margins:{ top:80, bottom:80, left:160, right:160 },
+        children:[p(t(text,{bold:true,size:22}))],
+      })]})],
+    });
+
+    // ── Read status for an expectation ───────────────────────────────
+    const getStatus = (stage, section, idx) => {
+      const radios = document.querySelectorAll(`input[name="status_${stage}_${section}_${idx}"]`);
+      for (const r of radios) { if (r.checked) return r.value; }
+      return '';
+    };
+    const getNotes = (stage, section, idx) => {
+      const el = document.getElementById(`notes_${stage}_${section}_${idx}`);
+      return el ? el.value.trim() : '';
+    };
+
+    // ── Expectations table with live data ────────────────────────────
+    const expTable = (items, statusCols, stageStr, sectionKey, headCol) => {
+      const c0=4200, cNote=2400;
+      const cStatus = Math.floor((CONTENT_W - c0 - cNote) / statusCols.length);
+      const colWidths = [c0, ...statusCols.map(()=>cStatus), cNote];
+
+      const headerRow = new TableRow({ children:[
+        cell([p(t('Expectation',{bold:true,size:18,color:C.white}))], c0,
+          { shading:{ fill:headCol, type:ShadingType.CLEAR } }),
+        ...statusCols.map(sc => cell(
+          [p(t(sc,{bold:true,size:17,color:C.white,allCaps:true}),{alignment:AlignmentType.CENTER})],
+          cStatus,
+          { shading:{ fill:headCol, type:ShadingType.CLEAR }, verticalAlign:VerticalAlign.CENTER }
+        )),
+        cell([p(t('Notes / Evidence',{bold:true,size:18,color:C.white}))], cNote,
+          { shading:{ fill:headCol, type:ShadingType.CLEAR } }),
+      ]});
+
+      const dataRows = items.map((item, idx) => {
+        const bg = idx%2===0 ? C.white : 'FAFAF8';
+        const status = getStatus(stageStr, sectionKey, idx);
+        const notes  = getNotes(stageStr, sectionKey, idx);
+
+        const statusCells = statusCols.map(sc => {
+          const isSel = status === sc;
+          const fill = isSel ? headCol : bg;
+          const mark = isSel ? '✓' : '○';
+          const col  = isSel ? C.white : 'CCCCCC';
+          return cell(
+            [p(t(mark,{bold:isSel,size:18,color:col}),{alignment:AlignmentType.CENTER})],
+            cStatus,
+            { shading:{ fill, type:ShadingType.CLEAR }, verticalAlign:VerticalAlign.CENTER }
+          );
+        });
+
+        return new TableRow({ children:[
+          cell([p(t(item,{size:19}))], c0, { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          ...statusCells,
+          cell([p(t(notes,{size:18,color:notes?C.text:C.muted,italics:!notes}))],
+            cNote, { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+        ]});
+      });
+
+      return new Table({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        columnWidths,
+        rows:[headerRow, ...dataRows],
+      });
+    };
+
+    // ── Summary table with live data ─────────────────────────────────
+    const summaryTable = (fields) => {
+      const c0=3200, c1=CONTENT_W-3200;
+      return new Table({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        columnWidths:[c0,c1],
+        rows: fields.map(([label, elId], i) => {
+          const val = document.getElementById(elId)?.value?.trim() || '';
+          const bg  = i%2===0 ? C.white : 'FAFAF8';
+          return new TableRow({ children:[
+            cell([p(t(label,{bold:true,size:19}))], c0, { shading:{ fill:C.light, type:ShadingType.CLEAR } }),
+            cell([p(t(val||'',{size:19,color:val?C.text:C.muted,italics:!val}))], c1,
+              { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          ]});
+        }),
+      });
+    };
+
+    // ── Overall position row with live data ──────────────────────────
+    const positionTable = (label, options, radioName) => {
+      const checkedEl = document.querySelector(`input[name="${radioName}"]:checked`);
+      const chosen = checkedEl ? checkedEl.value : '';
+      const optW = Math.floor((CONTENT_W - 2800) / options.length);
+      return new Table({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        columnWidths:[2800, ...options.map(()=>optW)],
+        rows:[new TableRow({ children:[
+          cell([p(t(label,{bold:true,size:19}))], 2800, { shading:{ fill:C.light, type:ShadingType.CLEAR }, verticalAlign:VerticalAlign.CENTER }),
+          ...options.map(opt => {
+            const sel = opt === chosen || opt.replace(/[✓~⚠✗] /,'') === chosen;
+            return cell(
+              [p([t(sel?'✓ ':'○ ',{bold:sel,size:18,color:sel?C.accent:'AAAAAA'}), t(opt,{size:18,bold:sel,color:sel?C.text:C.muted})],
+                { alignment:AlignmentType.CENTER })],
+              optW,
+              { shading:{ fill: sel?C.d90pale:C.white, type:ShadingType.CLEAR }, verticalAlign:VerticalAlign.CENTER }
+            );
+          }),
+        ]})],
+      });
+    };
+
+    // ── 1:1 entries table ────────────────────────────────────────────
+    const otoTable = () => {
+      const cols = [1400,1400,3000,2880,1400];
+      const headers = ['Date','Type','Notes / Discussed','Actions / Follow-ups','Sentiment'];
+      const sorted = [...oneToOneEntries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+      const headerRow = new TableRow({ children: headers.map((h,i) =>
+        cell([p(t(h,{bold:true,size:18,color:C.white}))], cols[i],
+          { shading:{ fill:C.accent, type:ShadingType.CLEAR } })
+      )});
+
+      const dataRows = sorted.length > 0 ? sorted.map((entry,i) => {
+        const bg = i%2===0 ? C.white : 'FAFAF8';
+        const fmtDate = entry.date
+          ? new Date(entry.date+'T12:00:00').toLocaleDateString('en-GB',{ day:'numeric',month:'short',year:'numeric' })
+          : '—';
+        return new TableRow({ children:[
+          cell([p(t(fmtDate,{size:18}))],          cols[0], { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          cell([p(t(entry.meetingType||'—',{size:18}))], cols[1], { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          cell([p(t(entry.notes||'',{size:18}))],  cols[2], { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          cell([p(t(entry.actions||'',{size:18}))],cols[3], { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+          cell([p(t(entry.sentiment||'—',{size:18}))],cols[4], { shading:{ fill:bg, type:ShadingType.CLEAR } }),
+        ]});
+      }) : [new TableRow({ children: cols.map((w,i) =>
+        cell([p(t(i===0?'No entries yet':'',{size:18,color:C.muted,italics:true}))], w,
+          { shading:{ fill:C.white, type:ShadingType.CLEAR } })
+      )})];
+
+      return new Table({
+        width:{ size:CONTENT_W, type:WidthType.DXA },
+        columnWidths: cols,
+        rows:[headerRow, ...dataRows],
+      });
+    };
+
+    // ── Bullet helper ────────────────────────────────────────────────
+    const bullet = (text, color=C.text) => new Paragraph({
+      numbering:{ reference:'bullets', level:0 },
+      children:[t(text,{size:20,color})],
+      ...sp(40,40),
+    });
+
+    // ── Assemble document ────────────────────────────────────────────
+    const children = [
+      // Title
+      p(t('30 / 60 / 90 Day Progress Tracker',{bold:true,size:40,color:C.accent}), sp(0,80)),
+      p(t('Probation Review Document',{size:24,color:C.muted,italics:true}), sp(0,160)),
+      blankRow(),
+      p(t('Team Member Details',{bold:true,size:26,color:C.text}), sp(80,100)),
+      infoTable,
+      blankRow(),
+
+      // ── 30 DAY ──────────────────────────────────────────────────
+      p(t(''),{pageBreakBefore:true}),
+      stageBanner('30 Day Review','Foundation & Learning',
+        'The first 30 days are focused on building a strong understanding of the product, internal systems, training processes, and accounting onboarding workflows. The team member should mainly be shadowing, learning, asking questions, and completing basic tasks with support.',
+        C.d30pale, C.day30),
+      blankRow(),
+
+      sectionBar('🎓  Training Delivery'),
+      expTable(EXPECTATIONS['30'].delivery, ['Not Started','In Progress','Confident'], '30','delivery',C.day30),
+      blankRow(),
+
+      sectionBar('⚙️  Training Operations'),
+      expTable(EXPECTATIONS['30'].operations, ['Not Started','In Progress','Confident'], '30','operations',C.day30),
+      blankRow(),
+
+      sectionBar('📋  Accounting Onboarding Monitoring'),
+      expTable(EXPECTATIONS['30'].accounting, ['Not Started','In Progress','Confident'], '30','accounting',C.day30),
+      blankRow(),
+
+      sectionBar('🤝  Behaviour & Approach'),
+      expTable(EXPECTATIONS['30'].behaviour, ['Not Started','In Progress','Confident'], '30','behaviour',C.day30),
+      blankRow(),
+
+      sectionBar('30 Day Summary'),
+      summaryTable([
+        ['What is going well',             'sum_30_going_well'],
+        ['Areas still developing',         'sum_30_developing'],
+        ['Support needed from manager',    'sum_30_support'],
+        ['Actions before 60 day review',   'sum_30_actions'],
+      ]),
+      blankRow(),
+      positionTable('Overall 30 Day Position',
+        ['On track','Slightly behind but improving','Cause for concern'], 'pos30'),
+      blankRow(),
+
+      // ── 60 DAY ──────────────────────────────────────────────────
+      p(t(''),{pageBreakBefore:true}),
+      stageBanner('60 Day Review','Supported Delivery',
+        'By 60 days, the team member should be starting to take ownership with support. This includes co-delivering training, managing smaller bookings end-to-end, completing system updates accurately, and running accounting onboarding reviews with guidance.',
+        C.d60pale, C.day60),
+      blankRow(),
+
+      sectionBar('🎓  Training Delivery'),
+      expTable(EXPECTATIONS['60'].delivery, ['Not Started','In Progress','Confident'], '60','delivery',C.day60),
+      blankRow(),
+
+      sectionBar('⚙️  Training Operations'),
+      expTable(EXPECTATIONS['60'].operations, ['Not Started','In Progress','Confident'], '60','operations',C.day60),
+      blankRow(),
+
+      sectionBar('📋  Accounting Onboarding Monitoring'),
+      expTable(EXPECTATIONS['60'].accounting, ['Not Started','In Progress','Confident'], '60','accounting',C.day60),
+      blankRow(),
+
+      sectionBar('🤝  Behaviour & Approach'),
+      expTable(EXPECTATIONS['60'].behaviour, ['Not Started','In Progress','Confident'], '60','behaviour',C.day60),
+      blankRow(),
+
+      sectionBar('60 Day Summary'),
+      summaryTable([
+        ['What is going well',             'sum_60_going_well'],
+        ['Areas still developing',         'sum_60_developing'],
+        ['Support needed from manager',    'sum_60_support'],
+        ['Actions before 90 day review',   'sum_60_actions'],
+      ]),
+      blankRow(),
+      positionTable('Overall 60 Day Position',
+        ['On track','Slightly behind but improving','Cause for concern'], 'pos60'),
+      blankRow(),
+
+      // ── 90 DAY ──────────────────────────────────────────────────
+      p(t(''),{pageBreakBefore:true}),
+      stageBanner('90 Day Review','Independent Delivery & Ownership',
+        'By 90 days, the team member should be able to work independently across training delivery, training operations, and accounting onboarding monitoring. They should be confidently managing their workload, delivering client-facing sessions, keeping systems up to date, and escalating risks where needed.',
+        C.d90pale, C.day90),
+      blankRow(),
+
+      sectionBar('🎓  Training Delivery'),
+      expTable(EXPECTATIONS['90'].delivery, ['Not Met','Partially Met','Met'], '90','delivery',C.day90),
+      blankRow(),
+
+      sectionBar('⚙️  Training Operations'),
+      expTable(EXPECTATIONS['90'].operations, ['Not Met','Partially Met','Met'], '90','operations',C.day90),
+      blankRow(),
+
+      sectionBar('📋  Accounting Onboarding Monitoring'),
+      expTable(EXPECTATIONS['90'].accounting, ['Not Met','Partially Met','Met'], '90','accounting',C.day90),
+      blankRow(),
+
+      sectionBar('📚  Product & Workflow Knowledge'),
+      expTable(EXPECTATIONS['90'].product, ['Not Met','Partially Met','Met'], '90','product',C.day90),
+      blankRow(),
+
+      sectionBar('🤝  Behaviour & Ownership'),
+      expTable(EXPECTATIONS['90'].behaviour, ['Not Met','Partially Met','Met'], '90','behaviour',C.day90),
+      blankRow(),
+
+      sectionBar('Final 90 Day Summary'),
+      summaryTable([
+        ['Overall strengths shown',                 'sum_90_strengths'],
+        ['Areas still requiring development',       'sum_90_development'],
+        ['Evidence of independent delivery',        'sum_90_independent'],
+        ['Evidence of ownership & accountability',  'sum_90_ownership'],
+        ['Support still required',                  'sum_90_support'],
+        ['Manager comments',                        'sum_90_manager'],
+        ['Team member comments',                    'sum_90_member'],
+      ]),
+      blankRow(),
+      positionTable('Final Outcome',
+        ['Successfully meeting expectations','Meeting most, some support required','Not yet meeting expectations','Probation concern / further action required'],
+        'finalOutcome'),
+      blankRow(),
+
+      // ── 1:1 REVIEWS ─────────────────────────────────────────────
+      p(t(''),{pageBreakBefore:true}),
+      p(t('1:1 Reviews & Check-ins',{bold:true,size:32,color:C.accent}), sp(0,120)),
+      otoTable(),
+      blankRow(),
+
+      // ── REFERENCE ───────────────────────────────────────────────
+      p(t(''),{pageBreakBefore:true}),
+      p(t('Reference Guide',{bold:true,size:32,color:C.accent}), sp(0,120)),
+
+      p(t('Progression Indicators',{bold:true,size:24,color:C.day90}), sp(120,80)),
+      ...['Progression from shadowing to supported delivery to independent delivery',
+        'Increased confidence in client-facing work',
+        'Consistent and accurate use of internal systems',
+        'Proactive communication and ownership of tasks',
+        'Ability to identify issues and take action without needing prompting',
+        'Clear understanding of training and accounting onboarding processes',
+        'Reliable follow-through on agreed actions'].map(x=>bullet(x)),
+      blankRow(),
+
+      p(t('Causes for Concern / Probation Risks',{bold:true,size:24,color:C.danger}), sp(80,80)),
+      ...['Lack of progress towards independent delivery by day 90',
+        'Avoidance of client interaction or low confidence without improvement',
+        'Poor system usage — Rocketlane not updated, tasks missed, or lack of diary/workload visibility',
+        'Failure to proactively manage or chase onboarding projects',
+        'Repeated reliance on others without showing learning or development',
+        'Lack of organisation, accountability, or attention to detail',
+        'Not escalating risks or blockers appropriately',
+        'Not following agreed processes after support or guidance has been given'].map(x=>bullet(x,C.danger)),
+      blankRow(),
+
+      p(t('Review Stage Overview',{bold:true,size:24,color:C.day30}), sp(80,80)),
+      ...['30 days: Foundation & Learning — mainly shadowing, learning, asking questions',
+        '60 days: Supported Delivery — taking ownership with support, reduced reliance on others',
+        '90 days: Independent Delivery & Ownership — working independently, managing full workload'].map(x=>bullet(x)),
+    ];
+
+    const doc = new Document({
+      numbering:{
+        config:[{
+          reference:'bullets',
+          levels:[{ level:0, format:LevelFormat.BULLET, text:'•', alignment:AlignmentType.LEFT,
+            style:{ paragraph:{ indent:{ left:440, hanging:280 } } } }],
+        }],
+      },
+      styles:{
+        default:{ document:{ run:{ font:'Calibri', size:20, color:C.text } } },
+      },
+      sections:[{
+        properties:{
+          page:{
+            size:{ width:PAGE_W, height:PAGE_H },
+            margin:{ top:MARGIN, right:MARGIN, bottom:MARGIN, left:MARGIN },
+          },
+        },
+        children,
+      }],
+    });
+
+    const buffer = await Packer.toBlob(doc);
+    const safeName = memberName.replace(/[^a-z0-9]/gi,'_');
+    const url = URL.createObjectURL(buffer);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `30-60-90_${safeName}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Word document exported successfully.');
+  } catch(err) {
+    console.error(err);
+    showToast('Export failed: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📄 Export Word Doc';
+  }
+}
 </script>
 </body>
 </html>
