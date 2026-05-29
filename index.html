@@ -22191,11 +22191,15 @@ async function exportToWord() {
       ['90 Day Review',document.getElementById('date90').textContent||'—'],
     ];
     const c0=3200,c1=CW-3200;
-    const infoTbl=new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[c0,c1],
-      rows:infoRows.map(([l,v],i)=>new TableRow({children:[
-        cell([p(t(l,{bold:true}))],c0,{shading:{fill:C.light,type:ShadingType.CLEAR}}),
-        cell([p(t(v))],c1,{shading:{fill:i%2===0?C.white:'F5F4F1',type:ShadingType.CLEAR}}),
-      ]}))});
+    const infoTbl=(()=>{
+      const rows=infoRows.map(([l,v],i)=>{
+        return new TableRow({children:[
+          cell([p(t(l,{bold:true}))],c0,{shading:{fill:C.light,type:ShadingType.CLEAR}}),
+          cell([p(t(v))],c1,{shading:{fill:i%2===0?C.white:'F5F4F1',type:ShadingType.CLEAR}}),
+        ]});
+      });
+      return new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[c0,c1],rows:rows});
+    })();
 
     const stageBanner=(tag,title,desc,bg,hc)=>{
       const bannerCell = new TableCell({
@@ -22216,13 +22220,16 @@ async function exportToWord() {
       });
     };
 
-    const sectionBar=(text)=>new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[CW],
-      rows:[new TableRow({children:[new TableCell({
-        width:{size:CW,type:WidthType.DXA},shading:{fill:'EAEAEA',type:ShadingType.CLEAR},
+    const sectionBar=(text)=>{
+      const sc=new TableCell({
+        width:{size:CW,type:WidthType.DXA},
+        shading:{fill:'EAEAEA',type:ShadingType.CLEAR},
         borders:{top:thin,bottom:thin,left:none,right:none},
         margins:{top:80,bottom:80,left:160,right:160},
         children:[p(t(text,{bold:true,size:22}))],
-      })]})]});
+      });
+      return new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[CW],rows:[new TableRow({children:[sc]})]});
+    };
 
     const getScore=(stage,section,idx)=>responses[stage]?.[section]?.[idx]?.score||0;
     const getNotes=(stage,section,idx)=>{const el=document.getElementById(`notes_${stage}_${section}_${idx}`);return el?.value?.trim()||'';};
@@ -22255,7 +22262,7 @@ async function exportToWord() {
           const fuText=`Blocker: ${fu.blocker||'—'} | Support: ${fu.support||'—'} | Action: ${fu.action||'—'} | Owner: ${fu.owner||'—'} | By: ${fu.date||'—'}`;
           rows.push(new TableRow({children:[
             cell([p(t('⚠ Follow-up',{bold:true,size:17,color:'8B1A1A'}))],c0,{shading:{fill:'FDF0F0',type:ShadingType.CLEAR}}),
-            cell([],cScore,{shading:{fill:'FDF0F0',type:ShadingType.CLEAR}}),
+            cell([p(t(''))],cScore,{shading:{fill:'FDF0F0',type:ShadingType.CLEAR}}),
             cell([p(t(fuText,{size:17,color:'8B1A1A'}))],cNotes,{shading:{fill:'FDF0F0',type:ShadingType.CLEAR}}),
           ]}));
         }
