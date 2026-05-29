@@ -21634,7 +21634,11 @@ function populateFromServer(data) {
   // Responses — new format with score + followup
   if (data.responses) {
     data.responses.forEach(r => {
-      const stage = r.reviewStage, section = r.category, idx = r.expectationIdx;
+      const stage = r.reviewStage, section = r.category;
+      // expectationIdx comes back as a string from the sheet. CF keys like "cf_30_2" must
+      // stay as strings; numeric keys must be parsed to integers to match array-index lookups.
+      const rawIdx = r.expectationIdx;
+      const idx = (rawIdx && rawIdx.toString().startsWith('cf_')) ? rawIdx : parseInt(rawIdx, 10);
       if (!responses[stage]) responses[stage] = {};
       if (!responses[stage][section]) responses[stage][section] = {};
       responses[stage][section][idx] = {
