@@ -2599,22 +2599,30 @@ async function exportToWord() {
     });
 
     // ── Stage banner ─────────────────────────────────────────────────
-    const stageBanner = (tag, title, desc, bg, headCol) => new Table({
-      width:{ size:CONTENT_W, type:WidthType.DXA },
-      columnWidths:[CONTENT_W],
-      rows:[new TableRow({ children:[new TableCell({
-        width:{ size:CONTENT_W, type:WidthType.DXA },
-        shading:{ fill:bg, type:ShadingType.CLEAR },
-        borders: bNone,
-        margins:{ top:160, bottom:160, left:200, right:200 },
-        children:[
-          p(t(tag,{bold:true,size:18,color:C.white,allCaps:true}),
-            { shading:{ fill:headCol, type:ShadingType.CLEAR }, ...sp(0,80) }),
-          p(t(title,{bold:true,size:28,color:headCol}), sp(0,60)),
-          p(t(desc,{size:19,color:C.muted,italics:true})),
+    const stageBanner = (tag, title, desc, bg, headCol) => {
+      return new Table({
+        width: { size: CONTENT_W, type: WidthType.DXA },
+        columnWidths: [CONTENT_W],
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: CONTENT_W, type: WidthType.DXA },
+                shading: { fill: bg, type: ShadingType.CLEAR },
+                borders: bNone,
+                margins: { top: 160, bottom: 160, left: 200, right: 200 },
+                children: [
+                  p(t(tag, {bold:true, size:18, color:C.white, allCaps:true}),
+                    { shading:{ fill:headCol, type:ShadingType.CLEAR }, ...sp(0,80) }),
+                  p(t(title, {bold:true, size:28, color:headCol}), sp(0,60)),
+                  p(t(desc,  {size:19, color:C.muted, italics:true})),
+                ],
+              }),
+            ],
+          }),
         ],
-      })})]},
-    });
+      });
+    };
 
     // ── Section bar ──────────────────────────────────────────────────
     const sectionBar = (text) => new Table({
